@@ -41,11 +41,28 @@ class CandidatoController extends Controller
         $profissoes_enum = Candidato::PROFISSAO_ENUM;
         sort($profissoes_enum);
 
+        $bairros = [
+            "Magano",
+            "Dom Hélder Câmara",
+            "Dom Thiago Postma",
+            "São José",
+            "Santo Antônio",
+            "Aloísio Pinto",
+            "Boa Vista",
+            "Francisco Figueira",
+            "Heliópolis",
+            "José Maria Dourado",
+            "Novo Heliópolis",
+            "Severiano Moraes Filho",
+            "Manoel Chéu",
+        ];
+
         return view("form_solicitacao")->with([
             "sexos" => Candidato::SEXO_ENUM,
             "postos" => $postos_com_vacina,
             "doses" => Candidato::DOSE_ENUM,
             "profissoes" => $profissoes_enum,
+            "bairros" => $bairros,
         ]);
     }
     public function ver($id) {
@@ -78,9 +95,9 @@ class CandidatoController extends Controller
             "pessoa_idosa"          => "nullable",
             "profissão"             => "required_if:profissional_da_saúde,on"
         ]);
-        
+
         $dados = $request->all();
-        
+
         $candidato = new Candidato;
         $candidato->nome_completo           = $request->nome_completo;
         $candidato->data_de_nascimento      = $request->data_de_nascimento;
@@ -99,7 +116,7 @@ class CandidatoController extends Controller
         $candidato->numero_residencia       = $request->input("número_residencial");
         $candidato->complemento_endereco    = $request->complemento_endereco;
         $candidato->aprovacao               = Candidato::APROVACAO_ENUM[0];
-        $candidato->dose                    = Candidato::APROVACAO_ENUM[0];
+        $candidato->dose                    = Candidato::DOSE_ENUM[0];
         $candidato->pessoa_idosa            = $request->pessoa_idosa;
 
         if ($request->profissional_da_saúde) {
@@ -174,7 +191,6 @@ class CandidatoController extends Controller
             ])->withInput();
         }
 
-
         $candidato->chegada                 = $datetime_chegada;
         $candidato->saida                   = $datetime_saida;
         $candidato->lote_id                 = $id_lote;
@@ -184,6 +200,22 @@ class CandidatoController extends Controller
         $candidato->paciente_dificuldade_locomocao = isset($dados["paciente_dificuldade_locomocao"]);
 
         $candidato->save();
+
+        $posto = PostoVacinacao::find($id_posto);
+        $lote = Lote::find($id_lote);
+
+        if (!$lote->dose_unica) {
+            $datetime_chegada_segunda_dose = $candidato->chegada->modify('+'.$lote->inicio_periodo.' day');
+            $candidatoSegundaDose = $candidato->replicate()->fill([
+                'chegada' =>  $datetime_chegada_segunda_dose,
+                'saida'   =>  $datetime_chegada_segunda_dose->copy()->addMinutes(10),
+            ]);
+
+            $candidatoSegundaDose->save();
+            if($candidatoSegundaDose->email != null){
+                Notification::send($candidatoSegundaDose, new CandidatoInscrito($candidatoSegundaDose));
+            }
+        }
 
         if($candidato->email != null){
             Notification::send($candidato, new CandidatoInscrito($candidato));
@@ -228,8 +260,8 @@ class CandidatoController extends Controller
         $candidato = Candidato::find($id);
         $candidato->aprovacao = Candidato::APROVACAO_ENUM[3];
         $candidato->update();
-        $candidato->posto->vacinas_disponiveis -= 1;
-        $candidato->posto->update();
+
+
 
         $etapa = $candidato->etapa;
         if ($etapa != null) {
