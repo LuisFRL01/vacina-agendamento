@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Notifications\CandidatoAprovado;
 use App\Notifications\CandidatoInscrito;
 use App\Notifications\CandidatoReprovado;
+use DateInterval;
 use Illuminate\Support\Facades\Notification;
 
 
@@ -82,24 +83,25 @@ class CandidatoController extends Controller
         $request->validate([
             "voltou"                => "nullable",
             "público"               => "required",
-            "nome_completo"         => "required|string|min:8|max:65|alpha",
+            "nome_completo"         => "required|string|min:8|max:65|regex:/^[\pL\s]+$/u",
             "data_de_nascimento"    => "required|date|before:today",
-            "cpf"                   => "required",
+            "cpf"                   => "required|unique:candidatos",
             "número_cartão_sus"     => "required",
             "sexo"                  => "required",
-            "nome_da_mãe"           => "required|string|min:8|max:65|alpha",
+            "nome_da_mãe"           => "required|string|min:8|max:65|regex:/^[\pL\s]+$/u",
             "telefone"              => "required",
             "whatsapp"              => "nullable",
             "email"                 => "nullable|email",
             "cep"                   => "nullable",
             // "cidade"                => "required", // como valor é fixado no front, pode ser desabilitado e hardcoded aqui no controller
             "bairro"                => "required",
-            "rua"                   => "required|alpha_num|min:5", // Na cohab 2, as pessoas não sabem os nomes das ruas, só os numeros, então tem gente que vai por "Rua 2"
-            "número_residencial"    => "required|alpha_num",
+            "rua"                   => "required|regex:/[a-zA-Z0-9\s]+/|min:5", // Na cohab 2, as pessoas não sabem os nomes das ruas, só os numeros, então tem gente que vai por "Rua 2"
+            "número_residencial"    => "required|regex:/[a-zA-Z0-9\s]+/",
             "complemento_endereco"  => "nullable",
             "posto_vacinacao"       => "required",
             "dia_vacinacao"         => "required",
             "horario_vacinacao"     => "required",
+            "opcao_etapa_".$request->input('público') => 'nullable',
         ]);
 
         $dados = $request->all();
@@ -210,7 +212,7 @@ class CandidatoController extends Controller
 
         if ($id_lote == 0) { // Se é 0 é porque não tem vacinas...
             return redirect()->back()->withErrors([
-                "posto_vacinacao" => "Não existem vacinas dispoiveis nesse posto..."
+                "posto_vacinacao" => "Não existem vacinas disponíveis nesse posto..."
             ])->withInput();
         }
 
@@ -258,6 +260,14 @@ class CandidatoController extends Controller
             return redirect()->back()->withErrors([
                 "message" => $e->getMessage(),
             ])->withInput();
+        }
+
+        if ($etapa->outrasInfo != null && count($etapa->outrasInfo) > 0) {
+            if ($request->input("opcao_etapa_".$etapa->id) != null && count($request->input("opcao_etapa_".$etapa->id)) > 0) {
+                foreach ($request->input("opcao_etapa_".$etapa->id) as $outra_info_id) {
+                    $candidato->outrasInfo()->attach($outra_info_id);
+                }
+            }
         }
 
         $agendamentos = Candidato::where('cpf', $candidato->cpf)->orderBy('dose')->get();
