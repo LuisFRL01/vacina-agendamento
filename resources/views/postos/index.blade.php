@@ -1,19 +1,20 @@
 <x-app-layout>
   <x-slot name="header">
-    <div class="grid grid-cols-6 gap-4">
-        <div class="col-span-5">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Lista de Pontos de Vacinação') }}
-            </h2>
-        </div>
-        <div class="...">
-            @can('criar-posto')
-                <a href="{{ route('postos.create') }}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                    Adicionar Ponto de Vacinação
-                </a>
-            @endcan
-        </div>
+      <div class="row">
+          <div class="col-md-9">
+              <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                  {{ __('Lista de Pontos de Vacinação') }}
+              </h2>
+          </div>
+          <div class="col-md-3" style="text-align: right">
+              @can('criar-posto')
+                  <a href="{{ route('postos.create') }}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                      Adicionar Ponto de Vacinação
+                  </a>
+              @endcan
+          </div>
       </div>
+
   </x-slot>
 
   <div class="py-12">
@@ -86,13 +87,13 @@
                                             </tr>
                                           </thead>
                                           <tbody>
-                                            @foreach ($posto->lotes as $lote)
+                                            @foreach ($posto->lotes as $key => $lote)
                                             <tr>
                                               <th scope="row">{{$lote->numero_lote}}</th>
                                               <td>{{$lote->fabricante }}</td>
                                               <td>{{$lote->dose_unica ? 'Sim' : 'Não'}}</td>
                                               <td>{{$lote->dose_unica ? " - " : 'Entre '.$lote->inicio_periodo." à  ". $lote->fim_periodo." dias" }} </td>
-                                              <td>{{$lote->pivot->qtdVacina - $posto->getCandidatosPorLote($lote->id) }}</td>
+                                              <td>{{$lote->pivot->qtdVacina - $posto->candidatos()->where('lote_id', $lote->pivot->id)->count()  }}</td>
                                               <td>
                                                 <form action="{{ route('lotes.alterarQuantidadeVacina') }}" method="post">
                                                     @csrf
@@ -100,7 +101,7 @@
                                                     <input type="hidden" name="lote_id" value="{{ $lote->id }}">
                                                     <div class="row">
                                                         <div class="col-6">
-                                                            <input class="form-control" name="quantidade" type="number" placeholder="Quantidade">
+                                                            <input class="form-control" name="quantidade"  min="1" type="number" placeholder="Quantidade">
                                                         </div>
                                                         <div class="col-2">
                                                             <button class="btn btn-success">Devolver</button>
@@ -109,11 +110,11 @@
                                                 </form>
                                               </td>
                                             </tr>
+
                                             @endforeach
                                           </tbody>
                                         </table>
                                     </td>
-
                             </tr>
                         @endforeach
 
