@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Etapa;
 use App\Models\Candidato;
 use App\Models\PostoVacinacao;
+use App\Models\Configuracao;
 
 class WelcomeController extends Controller
 {
@@ -14,6 +15,7 @@ class WelcomeController extends Controller
         $quantPessoasPriDose = 0;
         $quantPessoasSegDose = 0;
         $vacinasDisponiveisNosPontos = 0;
+        $config = Configuracao::first();
 
         $publicos = Etapa::orderBy('texto')->get();
         foreach ($publicos as $publico) {
@@ -22,9 +24,9 @@ class WelcomeController extends Controller
         }
 
         $pontos = PostoVacinacao::all();
-        foreach ($pontos as $ponto) {
-            foreach ($ponto->lotes()->select('qtdVacina')->get() as $vacinaPonto) {
-                $vacinasDisponiveisNosPontos += $vacinaPonto->qtdVacina;
+        foreach ($pontos as $posto) {
+            foreach ($posto->lotes as $key => $lote) {
+                $vacinasDisponiveisNosPontos += $lote->pivot->qtdVacina - $posto->candidatos()->where('lote_id', $lote->pivot->id)->count();
             }
         }
 
@@ -35,6 +37,7 @@ class WelcomeController extends Controller
                                       'quantPessoasPriDose'     => $quantPessoasPriDose,
                                       'quantPessoasSegDose'     => $quantPessoasSegDose,
                                       'tipos'                   => Etapa::TIPO_ENUM,
-                                      'vacinasDisponiveis'      => $vacinasDisponiveisNosPontos,]);
+                                      'vacinasDisponiveis'      => $vacinasDisponiveisNosPontos,
+                                      'config'                  => $config,]);
     }
 }

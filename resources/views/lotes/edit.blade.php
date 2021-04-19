@@ -37,7 +37,7 @@
                         </div>
                         <div class="col-md-6">
                             <label for="numero_vacinas">Nº de vacinas</label>
-                            <input id="numero_vacinas" min="1" type="number" class="form-control @error('numero_vacinas') is-invalid @enderror" name="numero_vacinas"  value="{{ $lote->numero_vacinas }}">
+                            <input id="numero_vacinas" min="0" type="number" class="form-control @error('numero_vacinas') is-invalid @enderror" name="numero_vacinas"  value="{{ $lote->numero_vacinas }}">
                             @error('numero_vacinas') <div class="alert alert-danger">{{ $message }}</div> @enderror
                         </div>
                     </div>
@@ -75,7 +75,7 @@
                                 <div class="input-group mb-3">
                                     <div class="input-group-prepend">
                                         <div class="input-group-text">
-                                        <input type="checkbox" name="etapa_id[]" value="{{ $etapa->id }}" aria-label="Checkbox for following text input">
+                                        <input type="checkbox" name="etapa_id[]" @if($lote->etapas()->find($etapa->id)) checked @endif value="{{ $etapa->id }}" aria-label="Checkbox for following text input">
                                         </div>
                                     </div>
                                     <input type="hidden" >
