@@ -22,7 +22,7 @@ class EtapaController extends Controller
         Gate::authorize('ver-etapa');
         $etapas = Etapa::where('tipo', '!=', Etapa::TIPO_ENUM[3])->orderBy('id')->get();
         $pontos = PostoVacinacao::all();
-        return view('etapas.index')->with(['etapas' => $etapas, 
+        return view('etapas.index')->with(['etapas' => $etapas,
                                            'tipos' => Etapa::TIPO_ENUM,]);
     }
 
@@ -51,14 +51,14 @@ class EtapaController extends Controller
         // dd($request);
         $validated = $request->validate([
             'tipo'                => 'required',
-            'texto_do_agendamento'=> 'required|max:30',
-            'texto_da_home'       => 'required|max:30',
-            'inicio_faixa_etária' => 'required_if:tipo,'.Etapa::TIPO_ENUM[0].'|min:0|max:110',
-            'fim_faixa_etária'    => 'required_if:tipo,'.Etapa::TIPO_ENUM[0].'|min:'.$request->inicio_faixa_etaria.'|max:150',
+            'texto_do_agendamento'=> 'required|max:60',
+            'texto_da_home'       => 'required|max:60',
+            'inicio_faixa_etária' => 'required_if:tipo,'.Etapa::TIPO_ENUM[0].'|required_if:tipo,'.Etapa::TIPO_ENUM[2].'|min:0|max:110',
+            'fim_faixa_etária'    => 'required_if:tipo,'.Etapa::TIPO_ENUM[0].'|required_if:tipo,'.Etapa::TIPO_ENUM[2].'|min:'.$request->inicio_faixa_etaria.'|max:150',
             'opcoes'              => 'required_if:tipo,'.Etapa::TIPO_ENUM[2],
             'opcoes.*'            => 'required_if:tipo,'.Etapa::TIPO_ENUM[2].'|max:150',
             'exibir_na_home'      => 'nullable',
-            'exibir_no_form'      => 'nullable',    
+            'exibir_no_form'      => 'nullable',
             'atual'               => 'nullable',
             'primeria_dose'       => 'nullable|min:0',
             'segunda_unica'       => 'nullable|min:0',
@@ -112,6 +112,9 @@ class EtapaController extends Controller
             $etapa->fim_intervalo = $request->input("fim_faixa_etária");
             $etapa->update();
         } else if ($request->tipo == Etapa::TIPO_ENUM[2]) {
+            $etapa->inicio_intervalo = $request->input("inicio_faixa_etária");
+            $etapa->fim_intervalo = $request->input("fim_faixa_etária");
+            $etapa->update();
             foreach ($request->opcoes as $op) {
                 $opcaoEtapa = new OpcoesEtapa();
                 $opcaoEtapa->opcao = $op;
@@ -125,7 +128,7 @@ class EtapaController extends Controller
                 $etapa->pontos()->attach($ponto);
             }
         }
-        
+
         $etapa->outras_opcoes_obrigatorio = $request->outras_informações_obrigatorias == "on";
 
         if ($request->outras_informações != null) {
@@ -182,17 +185,17 @@ class EtapaController extends Controller
     public function update(Request $request, $id)
     {
         Gate::authorize('editar-etapa');
-        
+
         $validated = $request->validate([
             'tipo'                => 'required',
-            'texto_do_agendamento'=> 'required|max:30',
-            'texto_da_home'       => 'required|max:30',
-            'inicio_faixa_etária' => 'required_if:tipo,'.Etapa::TIPO_ENUM[0].'|min:0|max:110',
-            'fim_faixa_etária'    => 'required_if:tipo,'.Etapa::TIPO_ENUM[0].'|min:'.$request->inicio_faixa_etaria.'|max:150',
+            'texto_do_agendamento'=> 'required|max:60',
+            'texto_da_home'       => 'required|max:60',
+            'inicio_faixa_etária' => 'required_if:tipo,'.Etapa::TIPO_ENUM[0].'|required_if:tipo,'.Etapa::TIPO_ENUM[2].'|min:0|max:110',
+            'fim_faixa_etária'    => 'required_if:tipo,'.Etapa::TIPO_ENUM[0].'|required_if:tipo,'.Etapa::TIPO_ENUM[2].'|min:'.$request->inicio_faixa_etaria.'|max:150',
             'opcoes'              => 'required_if:tipo,'.Etapa::TIPO_ENUM[2],
             'opcoes.*'            => 'required_if:tipo,'.Etapa::TIPO_ENUM[2].'|max:150',
             'exibir_na_home'      => 'nullable',
-            'exibir_no_form'      => 'nullable',    
+            'exibir_no_form'      => 'nullable',
             'atual'               => 'nullable',
             'primeria_dose'       => 'nullable|min:0',
             'segunda_unica'       => 'nullable|min:0',
@@ -214,7 +217,7 @@ class EtapaController extends Controller
                             "error" => "Não é possivel excluir a opção " . $op->opcao . " pois exitem agendamentos que a selecionaram.",
                         ]);
                     }
-                } 
+                }
             }
         } else if (($request->tipo == Etapa::TIPO_ENUM[1] && $etapa->tipo == Etapa::TIPO_ENUM[2]) || ($request->tipo == Etapa::TIPO_ENUM[0] && $etapa->tipo == Etapa::TIPO_ENUM[2])) {
             $candidatos = $etapa->candidatos;
@@ -249,7 +252,7 @@ class EtapaController extends Controller
 
         $etapa->texto = $request->texto_do_agendamento;
         $etapa->texto_home = $request->texto_da_home;
-        
+
         if ($request->texto_das_outras_informações != null) {
             $etapa->texto_outras_informacoes = $request->texto_das_outras_informações;
         }
@@ -328,6 +331,10 @@ class EtapaController extends Controller
                 $etapa->inicio_intervalo = $request->input("inicio_faixa_etária");
                 $etapa->fim_intervalo = $request->input("fim_faixa_etária");
             } else if ($request->tipo == Etapa::TIPO_ENUM[2]) {
+
+                $etapa->inicio_intervalo = $request->input("inicio_faixa_etária");
+                $etapa->fim_intervalo = $request->input("fim_faixa_etária");
+
                 $requestOpcoes = collect($request->input('op_ids'));
                 $opcaoEtapa = $etapa->opcoes;
                 // Opções excluidas
@@ -371,7 +378,7 @@ class EtapaController extends Controller
             }
         }
 
-        if ($request->input('outrasInfo_id') != null && count($request->input('outrasInfo_id')) > 0) { 
+        if ($request->input('outrasInfo_id') != null && count($request->input('outrasInfo_id')) > 0) {
             $requestOutras = collect($request->input('outrasInfo_id'));
             $outrasInfoEtapa = $etapa->outrasInfo;
 
