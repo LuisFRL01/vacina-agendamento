@@ -12,6 +12,7 @@ use Carbon\CarbonPeriod;
 use App\Models\Candidato;
 use App\Models\PostoVacinacao;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use App\Notifications\CandidatoAprovado;
 use App\Notifications\CandidatoFilaArquivo;
 use Illuminate\Support\Facades\Notification;
@@ -48,7 +49,7 @@ class FilaDistribuir extends Component
     public function distribuir()
     {
         $this->validate();
-
+        Gate::authorize('distribuir-fila');
         set_time_limit(3600);
         // dd($this->etapa_id, $this->ponto_id);
         $candidatos = Candidato::where('aprovacao', Candidato::APROVACAO_ENUM[0])->where('etapa_id', $this->etapa_id)->oldest()->get();
@@ -258,22 +259,13 @@ class FilaDistribuir extends Component
             }
 
             // Pega os candidatos do posto selecionado cuja data de vacinação é de amanhã pra frente, os que já passaram não importam
-            $candidatos = Candidato::where("posto_vacinacao_id", $posto->id)->whereDate('chegada', '>=', Carbon::tomorrow()->toDateString())->get();
+            $candidatos = Candidato::where("posto_vacinacao_id", $posto->id)->whereDate('chegada', '>=', Carbon::tomorrow()->toDateString())->where('aprovacao', Candidato::APROVACAO_ENUM[1])->get();
 
             $horarios_disponiveis = [];
 
-
             // Remove os horarios já agendados por outros candidados
             foreach($todos_os_horarios as $horario) {
-                $horario_ocupado = false;
-                foreach($candidatos as $candidato) {
-                    if($candidato->aprovacao != Candidato::APROVACAO_ENUM[2]) { // Todos que NÃO foram reprovados
-                        if($horario->equalTo($candidato->chegada)) {
-                            $horario_ocupado = true;
-                            break;
-                        }
-                    }
-                }
+                $horario_ocupado = $candidatos->contains('chegada', $horario);
 
                 if(!$horario_ocupado) {
                     array_push($horarios_disponiveis, $horario);
@@ -299,6 +291,7 @@ class FilaDistribuir extends Component
 
     public function render()
     {
+        Gate::authorize('distribuir-fila');
         return view('livewire.fila-distribuir');
     }
 }

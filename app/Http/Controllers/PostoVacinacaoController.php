@@ -23,9 +23,9 @@ class PostoVacinacaoController extends Controller
 
         $todos_os_horarios_por_dia = [];
         $todos_os_horarios = [];
-        set_time_limit(360);
+        set_time_limit(60);
         $posto = PostoVacinacao::find($posto_id);
-
+        $contador = 0;
         // Pega os proximos 7 dias
         for($i = 0; $i < 7; $i++) {
             $dia = Carbon::tomorrow()->addDay($i);
@@ -52,6 +52,10 @@ class PostoVacinacaoController extends Controller
                 $periodos_da_tarde = CarbonPeriod::create($inicio_do_dia, $posto->intervalo_atendimento_tarde . " minutes", $fim_do_dia);
                 array_push($todos_os_horarios_por_dia, $periodos_da_tarde);
             }
+            $contador++;
+            if($contador == 3){
+                break;
+            }
         }
 
         // Os periodos são salvos como horarios[dia][janela]
@@ -63,27 +67,12 @@ class PostoVacinacaoController extends Controller
         }
 
         // Pega os candidatos do posto selecionado cuja data de vacinação é de amanhã pra frente, os que já passaram não importam
-        $candidatos = Candidato::where("posto_vacinacao_id", $posto_id)->whereDate('chegada', '>=', Carbon::tomorrow()->toDateString())->get();
+        $candidatos = Candidato::where("posto_vacinacao_id", $posto_id)->whereDate('chegada', '>=', Carbon::tomorrow()->toDateString())->where('aprovacao', Candidato::APROVACAO_ENUM[1])->get();
 
-        $horarios_disponiveis = [];
+        // $candidatos = Candidato::where([["posto_vacinacao_id", $posto_id],["aprovacao", "!=", Candidato::APROVACAO_ENUM[2]]])->whereDate('chegada', '>=', Carbon::tomorrow()->toDateString())->get();
 
 
-        // Remove os horarios já agendados por outros candidados
-        foreach($todos_os_horarios as $horario) {
-            $horario_ocupado = false;
-            foreach($candidatos as $candidato) {
-                if($candidato->aprovacao != Candidato::APROVACAO_ENUM[2]) { // Todos que NÃO foram reprovados
-                    if($horario->equalTo($candidato->chegada)) {
-                        $horario_ocupado = true;
-                        break;
-                    }
-                }
-            }
-
-            if(!$horario_ocupado) {
-                array_push($horarios_disponiveis, $horario);
-            }
-        }
+        $horarios_disponiveis = array_diff($todos_os_horarios, $candidatos->pluck('chegada')->toArray());
 
         $horarios_agrupados_por_dia = [];
 
@@ -398,7 +387,7 @@ class PostoVacinacaoController extends Controller
     }
 
     public function diasPorPosto(Request $request) {
-        set_time_limit(360);
+        set_time_limit(60);
         if ($request->posto_id != null) {
             // Cria uma lista de possiveis horarios do proximo dia quando o posto abre
             // até a proxima semana, removendo os final de semanas
@@ -407,7 +396,7 @@ class PostoVacinacaoController extends Controller
             $todos_os_horarios = [];
 
             $posto = PostoVacinacao::find($request->posto_id);
-
+            $contador = 0;
             // Pega os proximos 7 dias
             for($i = 0; $i < 7; $i++) {
                 $dia = Carbon::tomorrow()->addDay($i);
@@ -434,6 +423,10 @@ class PostoVacinacaoController extends Controller
                     $periodos_da_tarde = CarbonPeriod::create($inicio_do_dia, $posto->intervalo_atendimento_tarde . " minutes", $fim_do_dia);
                     array_push($todos_os_horarios_por_dia, $periodos_da_tarde);
                 }
+                $contador++;
+                if($contador == 2){
+                    break;
+                }
             }
 
             // Os periodos são salvos como horarios[dia][janela]
@@ -445,22 +438,13 @@ class PostoVacinacaoController extends Controller
             }
 
             // Pega os candidatos do posto selecionado cuja data de vacinação é de amanhã pra frente, os que já passaram não importam
-            $candidatos = Candidato::where("posto_vacinacao_id", $request->posto_id)->whereDate('chegada', '>=', Carbon::tomorrow()->toDateString())->get();
+            $candidatos = Candidato::where("posto_vacinacao_id", $request->posto_id)->whereDate('chegada', '>=', Carbon::tomorrow()->toDateString())->where('aprovacao', Candidato::APROVACAO_ENUM[1])->get();
 
             $horarios_disponiveis = [];
 
-
             // Remove os horarios já agendados por outros candidados
             foreach($todos_os_horarios as $horario) {
-                $horario_ocupado = false;
-                foreach($candidatos as $candidato) {
-                    if($candidato->aprovacao != Candidato::APROVACAO_ENUM[2]) { // Todos que NÃO foram reprovados
-                        if($horario->equalTo($candidato->chegada)) {
-                            $horario_ocupado = true;
-                            break;
-                        }
-                    }
-                }
+                $horario_ocupado = $candidatos->contains('chegada', $horario);
 
                 if(!$horario_ocupado) {
                     array_push($horarios_disponiveis, $horario);
@@ -530,22 +514,13 @@ class PostoVacinacaoController extends Controller
             }
 
             // Pega os candidatos do posto selecionado cuja data de vacinação é de amanhã pra frente, os que já passaram não importam
-            $candidatos = Candidato::where("posto_vacinacao_id", $posto->id)->whereDate('chegada', '>=', Carbon::tomorrow()->toDateString())->get();
+            $candidatos = Candidato::where("posto_vacinacao_id", $posto->id)->whereDate('chegada', '>=', Carbon::tomorrow()->toDateString())->where('aprovacao', Candidato::APROVACAO_ENUM[1])->get();
 
             $horarios_disponiveis = [];
 
-
             // Remove os horarios já agendados por outros candidados
             foreach($todos_os_horarios as $horario) {
-                $horario_ocupado = false;
-                foreach($candidatos as $candidato) {
-                    if($candidato->aprovacao != Candidato::APROVACAO_ENUM[2]) { // Todos que NÃO foram reprovados
-                        if($horario->equalTo($candidato->chegada)) {
-                            $horario_ocupado = true;
-                            break;
-                        }
-                    }
-                }
+                $horario_ocupado = $candidatos->contains('chegada', $horario);
 
                 if(!$horario_ocupado) {
                     array_push($horarios_disponiveis, $horario);

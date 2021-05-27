@@ -8,16 +8,13 @@
                 </h2>
 
             </div>
-            <div class="col-md-4" id="Distribuir" class="col-md-4" style="text-align: right;">
-                <a  class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" href="{{route('fila.painel',)}}">
-                       Novo Distribuir agendamentos
-                </a>
-            </div>
-            {{-- <div class="col-md-4" id="Distribuir" class="col-md-4" style="text-align: right;">
-                <a  class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" href="{{route('fila.distribuir',)}}">
+            @can('distribuir-fila')
+                <div class="col-md-4" id="Distribuir" class="col-md-4" style="text-align: right;">
+                    <a  class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" href="{{route('fila.painel',)}}">
                         Distribuir agendamentos
-                </a>
-            </div> --}}
+                    </a>
+                </div>
+            @endcan
 
         </div>
     </x-slot>
@@ -240,29 +237,7 @@
                             @endif
                         </div>
                         <br>
-                        @if ($candidato->lote != null)
-                            <div class="row">
-                                <h4>Lote</h4>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label for="nome_{{$candidato->id}}">fabricante</label>
-                                    <input id="nome_{{$candidato->id}}" type="text" class="form-control" disabled value="{{$candidato->lote->fabricante ?? "Indefinido"}}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="nome_{{$candidato->id}}">Nº do lote</label>
-                                    <input id="nome_{{$candidato->id}}" type="text" class="form-control" disabled value="{{$candidato->lote->numero_lote ?? "Indefinido"}}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="nome_{{$candidato->id}}">Dose única</label>
-                                    <input id="nome_{{$candidato->id}}" type="text" class="form-control" disabled value="{{$candidato->lote->dose_unica ? "Sim" : "Não"}}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="nome_{{$candidato->id}}">Tempo para segunda dose</label>
-                                    <input id="nome_{{$candidato->id}}" type="text" class="form-control" disabled value="{{$candidato->lote->dose_unica ?  " - " : $candidato->lote->inicio_periodo ." dias"  }}">
-                                </div>
-                            </div>
-                        @endif
+
                         <br>
                         <div class="row">
                             <h4>Informações pessoais</h4>
@@ -392,13 +367,13 @@
 
 
                             <br>
-                            <div class="row">
+                            {{-- <div class="row">
                                 <div class="col-md-6">
                                 </div>
                                 <div class="col-md-6">
                                     <button id="btn_edit_{{$candidato->id}}" type="button" class="btn btn-primary" style="width: 100%;" onclick="reagendar({{$candidato->id}}, true)">Reagendar</button>
                                 </div>
-                            </div>
+                            </div> --}}
                         </div>
 
                         <div id="editar_agendado_para_{{$candidato->id}}" style="display: none;">
@@ -600,7 +575,7 @@
                     }
                 }
                 document.getElementById('agendamentos').innerHTML = "";
-                $('#agendamentos').append(html); 
+                $('#agendamentos').append(html);
             },
             error:function(data){
                 console.log('erro');
@@ -609,5 +584,5 @@
         })
     }*/
 
-    
+
 </script>

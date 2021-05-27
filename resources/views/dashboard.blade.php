@@ -71,6 +71,10 @@
                                     <label>Ponto</label>
                                 </div>
                                 <div class="col-md-3">
+                                    <input type="checkbox" name="tipo_check" id="ponto_check_input" @if($request->tipo_check != null && $request->tipo_check) checked @endif onclick="mostrarFiltro(this, 'tipo_check')">
+                                    <label>Tipo</label>
+                                </div>
+                                <div class="col-md-3">
                                     <input type="checkbox" name="publico_check" id="publico_check_input" @if($request->publico_check != null && $request->publico_check) checked @endif onclick="mostrarFiltro(this, 'publico_check')">
                                     <label>Público</label>
                                 </div>
@@ -103,6 +107,7 @@
                                         <option @if($request->campo == "chegada") selected @endif value="chegada">dia</option>
                                     </select>
                                 </div>
+
                                 <div id="ordem_check" class="col-md-3" @if($request->ordem_check != null && $request->ordem_check) style="display: block;" @else style="display:none;" @endif>
                                     <select id="ordem" name="ordem" class="form-control">
                                         <option value="">-- ordem --</option>
@@ -116,6 +121,15 @@
                                         @foreach ($postos as $posto)
                                             <option @if($request->ponto == $posto->id) selected @endif value="{{ $posto->id }}">{{ $posto->nome }}</option>
                                         @endforeach
+                                    </select>
+                                </div>
+                                <div id="tipo_check" class="col-md-3" @if($request->tipo_check != null && $request->tipo_check) style="display: block;" @else style="display:none;" @endif>
+                                    <select id="tipo" name="tipo" class="form-control">
+                                        <option value="">-- tipo --</option>
+                                            <option @if($request->tipo == "Aprovado") selected @endif value="{{ "Aprovado" }}">{{ "Aprovado" }}</option>
+                                            <option @if($request->tipo == "Reprovado") selected @endif value="{{ "Reprovado" }}">{{ "Reprovado" }}</option>
+                                            <option @if($request->tipo == "Vacinado") selected @endif value="{{ "Vacinado" }}">{{ "Vacinado" }}</option>
+                                            <option @if($request->tipo == "Não Analisado") selected @endif value="{{ "Não Analisado" }}">{{ "Não Analisado" }}</option>
                                     </select>
                                 </div>
                                 <div id="publico_check" class="col-md-3" @if($request->publico_check != null && $request->publico_check) style="display: block;" @else style="display:none;" @endif>
@@ -177,7 +191,7 @@
                         <tbody id="agendamentos">
                             @foreach ($candidatos as $i => $candidato)
                             <tr>
-                                <td style="display:none;">{{$candidato->toJson()}}</td>
+                                {{-- <td style="display:none;">{{$candidato->toJson()}}</td> --}}
                                 <td>{{ $candidato->id }}</td>
                                 <td>
                                     <span class="d-inline-block text-truncate" class="d-inline-block" tabindex="0" data-toggle="tooltip" title="{{$candidato->nome_completo}}" style="max-width: 150px;">
@@ -185,10 +199,10 @@
                                       </span>
                                 </td>
                                 <td>{{$candidato->cpf}}</td>
-                                <td>{{date('d/m/Y',strtotime($candidato->chegada))}}</td>
-                                <td>{{date('H:i',strtotime($candidato->chegada))}} - {{date('H:i',strtotime($candidato->saida))}}</td>
+                                <td>{{ $candidato->chegada ? date('d/m/Y',strtotime($candidato->chegada)) : "Indefinido" }}</td>
+                                <td>{{ $candidato->chegada ? date('H:i',strtotime($candidato->chegada)) ."-". date('H:i',strtotime($candidato->saida)) : "Indefinido" }}</td>
                                 <td>
-                                    {{ $candidato->dose  }}
+                                    {{ $candidato->chegada ?  $candidato->dose : "Indefinido" }}
                                 </td>
                                 <td>
                                     <span class="d-inline-block text-truncate" class="d-inline-block" tabindex="0" data-toggle="tooltip" title="{{$candidato->nome_completo}}" style="max-width: 150px;">
@@ -198,51 +212,56 @@
                                 <td data-toggle="modal" data-target="#visualizar_candidato_{{$candidato->id}}">
                                     <a href="#"><img src="{{asset('img/icons/eye-regular.svg')}}" alt="Visualizar" width="25px;"></a>
                                 </td>
+                                @can('confirmar-vaga-candidato')
                                 <td>
-                                    @if ($candidato->aprovacao != null && $candidato->aprovacao == $candidato_enum[3])
-                                        Vacinado
-                                    @else
-                                        @can('confirmar-vaga-candidato')
-                                        <form method="POST" action="{{route('update.agendamento', ['id' => $candidato->id])}}">
-                                            @csrf
-                                            <div class="row">
-                                                <div class="col-md-12 px-0">
-                                                    <select onchange="this.form.submit()" id="confirmacao_{{$candidato->id}}" class="form-control" name="confirmacao" required>
-                                                        <option value="" selected disabled>selecione</option>
-                                                        <option value="{{$candidato_enum[1]}}" @if($candidato->aprovacao == $candidato_enum[1]) selected @endif>Confirmar</option>
-                                                        <option value="{{$candidato_enum[2]}}" @if($candidato->aprovacao == $candidato_enum[2]) selected @endif>Reprovado</option>
-                                                        <option value="Ausente" >Ausente</option>
-                                                        {{-- <option value="restaurar" >Restaurar</option> --}}
-                                                    </select>
+                                    @if($candidato->lote_id)
+                                        @if ($candidato->aprovacao != null && $candidato->aprovacao == $candidato_enum[3])
+                                            Vacinado
+                                        @else
+
+                                            <form method="POST" action="{{route('update.agendamento', ['id' => $candidato->id])}}">
+                                                @csrf
+                                                <div class="row">
+                                                    <div class="col-md-12 px-0">
+                                                        <select onchange="this.form.submit()" id="confirmacao_{{$candidato->id}}" class="form-control" name="confirmacao" required>
+                                                            <option value="" selected disabled>selecione</option>
+                                                            <option value="{{$candidato_enum[1]}}" @if($candidato->aprovacao == $candidato_enum[1]) selected @endif>Confirmar</option>
+                                                            <option value="{{$candidato_enum[2]}}" @if($candidato->aprovacao == $candidato_enum[2]) selected @endif>Reprovado</option>
+                                                            <option value="Ausente" >Ausente</option>
+                                                            {{-- <option value="restaurar" >Restaurar</option> --}}
+                                                        </select>
+                                                    </div>
+                                                    {{-- <div class="col-md-2">
+
+                                                            <button class="btn btn-success"><i class="far fa-check-circle"></i></button>
+
+                                                    </div> --}}
                                                 </div>
-                                                {{-- <div class="col-md-2">
+                                            </form>
 
-                                                        <button class="btn btn-success"><i class="far fa-check-circle"></i></button>
-
-                                                </div> --}}
-                                            </div>
-                                        </form>
-                                        @endcan
+                                        @endif
                                     @endif
                                 </td>
-
+                                @endcan
+                                @can('vacinado-candidato')
                                 <td style="text-align: center;" class="pl-4">
-                                    @can('vacinado-candidato')
-                                        <button data-toggle="modal" data-target="#vacinar_candidato_{{$candidato->id}}" class="btn btn-primary" @if ($candidato->aprovacao != null && $candidato->aprovacao == $candidato_enum[3]) disabled @endif><i class="fas fa-syringe"></i></button>
-                                        @if ($candidato->aprovacao != null && $candidato->aprovacao == $candidato_enum[3])
-                                            <button class="btn btn-danger" data-toggle="modal" data-target="#cancelar_vacinado_candidato_{{$candidato->id}}"><i class="far fa-times-circle"></i></button>
-                                        @endif
-                                    @endcan
-                                </td>
+                                    @if($candidato->lote_id)
+                                            <button data-toggle="modal" data-target="#vacinar_candidato_{{$candidato->id}}" class="btn btn-primary" @if ($candidato->aprovacao != null && $candidato->aprovacao == $candidato_enum[3]) disabled @endif><i class="fas fa-syringe"></i></button>
+                                            @if ($candidato->aprovacao != null && $candidato->aprovacao == $candidato_enum[3])
+                                                <button  class="btn btn-danger " data-toggle="modal" data-target="#cancelar_vacinado_candidato_{{$candidato->id}}"><i class="far fa-times-circle"></i></button>
+                                            @endif
+                                            @endif
+                                        </td>
+                                @endcan
+                                @can('whatsapp-candidato')
                                 <td>
-                                    @can('whatsapp-candidato')
                                         @if ($candidato->aprovacao != null && $candidato->aprovacao != $candidato_enum[3])
                                             <a href="https://api.whatsapp.com/send?phone=55{{$candidato->getWhatsapp()}}&text={{$candidato->getMessagemWhatsapp()}}" class="text-center"  target="_blank"><i class="fab fa-whatsapp"></i></a>
                                         @else
                                             <a class="text-center"  target="_blank"><i class="fab fa-whatsapp"></i></a>
                                         @endif
-                                    @endcan
-                                </td>
+                                    </td>
+                                @endcan
                             </tr>
                             @endforeach
                         </tbody>
@@ -258,7 +277,7 @@
             </div>
         </div>
     </div>
-    
+
     @foreach ($candidatos as $i => $candidato)
         <!-- Modal -->
             <div class="modal fade" id="visualizar_candidato_{{$candidato->id}}" tabindex="-1" aria-labelledby="visualizar_candidato_{{$candidato->id}}_label" aria-hidden="true">
@@ -273,7 +292,15 @@
                     <div class="container">
                         <div class="modal-body">
                             <div class="row">
-                                <h4>Informações do público</h4>
+                                <div class="col-10">
+                                    <h4>Informações do público</h4>
+                                </div>
+                                @can('editar-candidato')
+                                    <div class="col-2">
+                                        <a class="btn btn-info" href="{{ route('candidato.form_edit', ['id' => $candidato->id]) }}">Editar</a>
+                                    </div>
+                                @endcan
+
                             </div>
                             <div class="row">
                                 @if ($candidato->etapa->tipo == $tipos[0] || $candidato->etapa->tipo == $tipos[1] )
@@ -298,26 +325,32 @@
                                 @endif
                             </div>
                             <br>
-                            @if ($candidato->lote != null)
+                            @php
+                                $lote = App\Models\LotePostoVacinacao::find($candidato->lote_id);
+                                if($lote != null){
+                                    $lote->lote;
+                                }
+                            @endphp
+                            @if ($lote != null)
                                 <div class="row">
                                     <h4>Lote</h4>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <label for="nome_{{$candidato->id}}">fabricante</label>
-                                        <input id="nome_{{$candidato->id}}" type="text" class="form-control" disabled value="{{$candidato->lote->fabricante ?? "Indefinido"}}">
+                                        <label for="fabricante_{{$candidato->id}}">fabricante</label>
+                                        <input id="fabricante_{{$candidato->id}}" type="text" class="form-control" disabled value="{{$lote->fabricante ?? "Indefinido"}}">
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="nome_{{$candidato->id}}">Nº do lote</label>
-                                        <input id="nome_{{$candidato->id}}" type="text" class="form-control" disabled value="{{$candidato->lote->numero_lote ?? "Indefinido"}}">
+                                        <label for="lote_{{$candidato->id}}">Nº do lote</label>
+                                        <input id="lote_{{$candidato->id}}" type="text" class="form-control" disabled value="{{$lote->numero_lote ?? "Indefinido"}}">
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="nome_{{$candidato->id}}">Dose única</label>
-                                        <input id="nome_{{$candidato->id}}" type="text" class="form-control" disabled value="{{$candidato->lote->dose_unica ? "Sim" : "Não"}}">
+                                        <label for="dose_unica_{{$candidato->id}}">Dose única</label>
+                                        <input id="dose_unica_{{$candidato->id}}" type="text" class="form-control" disabled value="{{$lote->dose_unica ? "Sim" : "Não"}}">
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="nome_{{$candidato->id}}">Tempo para segunda dose</label>
-                                        <input id="nome_{{$candidato->id}}" type="text" class="form-control" disabled value="{{$candidato->lote->dose_unica ?  " - " : $candidato->lote->inicio_periodo ." dias"  }}">
+                                        <label for="tempo_{{$candidato->id}}">Tempo para segunda dose</label>
+                                        <input id="tempo_{{$candidato->id}}" type="text" class="form-control" disabled value="{{$lote->dose_unica ?  " - " : $lote->inicio_periodo ." dias"  }}">
                                     </div>
                                 </div>
                             @endif
@@ -432,7 +465,7 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <label for="complemento_{{$candidato->id}}">Complemento</label>
-                                    <textarea id="complemento_{{$candidato->id}}" type="text" class="form-control" disabled rows="3">{{$candidato->numero_residencia}}</textarea>
+                                    <textarea id="complemento_{{$candidato->id}}" type="text" class="form-control" disabled rows="3">{{$candidato->complemento_endereco ?? " "}}</textarea>
                                 </div>
                             </div>
                             <br>
@@ -467,13 +500,16 @@
                                     </div>
                                 </div>
                                 <br>
-                                <div class="row">
-                                    <div class="col-md-6">
+                                @can('reagendar')
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <button id="btn_edit_{{$candidato->id}}" type="button" class="btn btn-primary" style="width: 100%;" onclick="reagendar({{$candidato->id}}, true)">Reagendar</button>
+                                        </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <button id="btn_edit_{{$candidato->id}}" type="button" class="btn btn-primary" style="width: 100%;" onclick="reagendar({{$candidato->id}}, true)">Reagendar</button>
-                                    </div>
-                                </div>
+                                @endcan
                             </div>
 
                             <div id="editar_agendado_para_{{$candidato->id}}" style="display: none;">
@@ -482,10 +518,10 @@
                                     <input type="hidden" name="edit_agendamento_id" value="{{$candidato->id}}">
                                     <div class="form-row">
                                         <div class="form-group col-md-6">
-                                            <label for="posto_vacinacao" class="style_titulo_input">PONTO DE VACINAÇÃO<span class="style_titulo_campo">*</span><span class="style_subtitulo_input"> (obrigatório)</span></label>
-                                            <select id="posto_vacinacao" class="form-control style_input @error('posto_vacinacao_'.$candidato->id) is-invalid @enderror" name="posto_vacinacao_{{$candidato->id}}" required onchange="selecionar_posto(this, {{$candidato->id}})">
+                                            <label for="posto_vacinacao_{{$candidato->id}}" class="style_titulo_input">PONTO DE VACINAÇÃO<span class="style_titulo_campo">*</span><span class="style_subtitulo_input"> (obrigatório)</span></label>
+                                            <select id="posto_vacinacao_{{$candidato->id}}" class="form-control style_input @error('posto_vacinacao_'.$candidato->id) is-invalid @enderror" name="posto_vacinacao_{{$candidato->id}}" required onchange="selecionar_posto(this, {{$candidato->id}})">
                                                 <option selected disabled>-- Selecione o ponto --</option>
-                                                @foreach($postos as $posto)
+                                                @foreach($candidato->etapa->pontos as $posto)
                                                     <option value="{{$posto->id}}">{{$posto->nome}}</option>
                                                 @endforeach
                                             </select>
@@ -530,7 +566,7 @@
                         <div class="modal-body">
                         <form id="vacinado_{{$candidato->id}}" action="{{route('candidato.vacinado', ['id' => $candidato->id])}}" method="POST">
                                 @csrf
-                                Deseja confirmar que esse candidato foi vacinado?
+                                Deseja confirmar que esse candidato foi vacinado?(CPF:{{ $candidato->cpf }})
                         </form>
                         </div>
                         <div class="modal-footer">
@@ -567,7 +603,7 @@
                 </div>
             <!-- Modal cancelar vacina -->
         @endif
-    @endforeach 
+    @endforeach
 
 @if(old('edit_agendamento_id') != null)
     <script>
@@ -639,27 +675,25 @@
                 $('#seletor_horario_'+id).append(htmlHorarios);
             },
             error:function(data){
-                console.log('erro');
-                alert('Erro'.data);
+                alert('Houve algum erro, entre em contato com a administração do site.');
             },
         })
     }
 
     function selecionar_dia_vacinacao(select_dia, id) {
         var divHorarios = document.getElementById('seletor_horario_'+id);
+        var divHoras = document.getElementById("seletor_horario_dia_"+select_dia.value+"_"+id);
+
         for (var i = 0; i < divHorarios.children.length; i++) {
-            var divHoras = document.getElementById("seletor_horario_dia_"+select_dia.value+"_"+id);
-            var inputHoras = document.getElementById("select_horario_input_"+select_dia.value+"_"+id);
+            var inputHoras = divHorarios.children[i].children[0].children[0].children[1];
             if (divHoras == divHorarios.children[i]) {
-                divHoras.style.display = "block";
-                inputHoras.setAttribute('name', "hora_"+id);
-                inputHoras.name = "horario_vacinacao_"+id;
-                inputHoras.id = "horario_vacinacao_"+id;
+                divHorarios.children[i].style.display = "";
+                inputHoras.setAttribute('name', "horario_vacinacao_"+id);
                 inputHoras.required = true;
             } else {
-                divHorarios.children[i].style="display:none";
-                inputHoras.options.selectedIndex = 0;
-                inputHoras.name = "";
+                divHorarios.children[i].style.display ="none";
+                inputHoras.selectedIndex = 0;
+                inputHoras.setAttribute('name', "");
                 inputHoras.required = false;
             }
         }
@@ -681,8 +715,8 @@
         var form = document.getElementById(idForm);
         form.submit();
     }
-    
-    
+
+
     /*
     function filtrar() {
         $.ajax({
@@ -720,13 +754,13 @@
                     }
                 }
                 document.getElementById('agendamentos').innerHTML = "";
-                $('#agendamentos').append(html); 
+                $('#agendamentos').append(html);
             },
             error:function(data){
                 console.log('erro');
                 alert('Erro'.data);
             },
         })
-    }*/    
+    }*/
 </script>
 </x-app-layout>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Livewire\StoreLote;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FilaController;
@@ -44,10 +45,14 @@ Route::get("/anexo/{name}", [WelcomeController::class, 'baixarAnexo'])->name('ba
 Route::get('/sobre', [WelcomeController::class, 'sobre'])->name('sobre');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/form',  [AdminController::class, 'userForm'])->name('admin.form.user');
+    Route::post('/admin/create/user',  [AdminController::class, 'createUser'])->name('admin.create.user');
     Route::get('/dashboard',  [CandidatoController::class, 'show'])->name('dashboard');
     Route::post("/agendamento/{id}/confirmacao", [CandidatoController::class, 'update'])->name("update.agendamento");
     Route::post("/agendamento/{id}/confirmar-vacinacao", [CandidatoController::class, 'vacinado'])->name('candidato.vacinado');
     Route::post("/agendamento/{id}/desfazer-vacinacao", [CandidatoController::class, 'desfazerVacinado'])->name('desfazer.vacinado');
+    Route::get("/agendamento/form/edit/{id}", [CandidatoController::class, 'form_edit'])->name('candidato.form_edit');
+    Route::post("/agendamento/editar/{id}", [CandidatoController::class, 'editar'])->name('candidato.editar');
     Route::get("/candidato/lote", [CandidatoController::class, 'CandidatoLote'])->name('candidato.candidatoLote');
     Route::get("/candidato/order/{field}/campo/{order}", [CandidatoController::class, 'ordenar'])->name('candidato.order');
     Route::get("/candidato/filtro/{field}/tipo/{tipo}", [CandidatoController::class, 'filtro'])->name('candidato.filtro');
@@ -84,9 +89,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('exportar/candidato/', [ExportController::class, 'exportCandidato'])->name('export.candidato');
     Route::get('exportar/lote', [ExportController::class, 'exportLote'])->name('export.lote');
     Route::get('exportar/postos', [ExportController::class, 'exportPosto'])->name('export.posto');
-    Route::get('exportar/postos/candidato/{id}', [ExportController::class, 'exportPostoCandidato'])->name('export.exportPostoCandidato');
-    Route::get('exportar/index', [ExportController::class, 'index'])->name('export.index');
+    Route::get('exportar/postos/candidato', [ExportController::class, 'exportPostoCandidato'])->name('export.exportPostoCandidato');
+    Route::get('exportar/index', [ExportController::class, 'exportPostoCandidato'])->name('export.index');
     Route::get('exportar/listaCandidato', [ExportController::class, 'listarCandidato'])->name('export.candidatos');
+    Route::post('exportar/gerar', [ExportController::class, 'gerar'])->name('export.gerar');
     Route::get('/exportar/agendamentos/posto/{id}', [ExportController::class,'agendamentosDoPosto'])->name('export.agendamentos.posto');
     Route::get('/configuracoes', [ConfiguracaoController::class, 'index'])->name('config.index');
     Route::get('/configuracoes/salvar', [ConfiguracaoController::class, 'update'])->name('config.update');
