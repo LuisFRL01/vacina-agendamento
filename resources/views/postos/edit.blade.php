@@ -16,6 +16,15 @@
     <div class="py-12">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <div class="container">
+                @if (count($errors) > 0)
+                    <div class="alert alert-danger">
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
                 <form action="{{ route('postos.update', ['posto' => $posto->id]) }}" method="post">
                     @csrf
@@ -152,7 +161,7 @@
 
 
 
-                    
+
                     <div class="row">
                         <div class="col-md">
                             <input onchange="check_funcionamento(this, 'seletores_funcionamento_tarde')" id="funcionamento_tarde" type="checkbox" name="funcionamento_tarde" @if(old('funcionamento_tarde') || (old('funcionamento_tarde') == null && $posto->inicio_atendimento_tarde && $posto->intervalo_atendimento_tarde && $posto->fim_atendimento_tarde)) checked @endif>
@@ -190,6 +199,48 @@
                         </div>
                     </div>
                     <br>
+
+
+
+
+
+                    <div class="row">
+                        <div class="col-md">
+                            <input onchange="check_funcionamento(this, 'seletores_funcionamento_noite')" id="funcionamento_noite" type="checkbox" name="funcionamento_noite" @if(old('funcionamento_noite') || (old('funcionamento_noite') == null && $posto->inicio_atendimento_noite && $posto->inicio_atendimento_noite && $posto->fim_atendimento_noite)) checked @endif>
+                            <label for="funcionamento_noite">Funciona pela noite</label>
+                            @error('funcionamento_noite') <div class="alert alert-danger">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+
+                    <div id="seletores_funcionamento_noite" class="row" @if(!(old('funcionamento_noite') || (old('funcionamento_noite') == null && $posto->inicio_atendimento_noite && $posto->inicio_atendimento_noite && $posto->fim_atendimento_noite))) style="display: none;" @endif>
+                        <div class="col-md-4">
+                            <label style="margin-right: 8%;">Inicio:</label>
+                            <select name="inicio_atendimento_noite" class="form-control">
+                                <option disabled selected> -- hrs</option>
+                                @for($i = 17; $i <= 23; $i++)
+                                   <option value="{{$i}}" @if(old('inicio_atendimento_noite', $posto->inicio_atendimento_noite) == $i) selected @endif >{{$i}} hrs</option>
+                                @endfor
+                            </select>
+                            @error('inicio_atendimento_noite') <div class="alert alert-danger">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="col-md-4">
+                            <label style="margin-right: 8%;">Fim:</label>
+                            <select name="fim_atendimento_noite"class="form-control">
+                                <option disabled selected> -- hrs</option>
+                                @for($i = 17; $i <= 23; $i++)
+                                   <option value="{{$i}}" @if(old('fim_atendimento_noite', $posto->fim_atendimento_noite) == $i) selected @endif>{{$i}} hrs</option>
+                                @endfor
+                            </select>
+                            @error('fim_atendimento_noite') <div class="alert alert-danger">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="col-md-4">
+                            <label style="margin-right: 8%;">Intervalo (mins):</label>
+                            <input min="1" max="60" type="number" class="form-control" style="width: 75%;" name="intervalo_atendimento_noite" value="{{old('intervalo_atendimento_noite', $posto->intervalo_atendimento_noite)}}">
+                            @error('intervalo_atendimento_noite') <div class="alert alert-danger">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+                    <br>
                     <br>
                     <br>
 
@@ -218,9 +269,9 @@
              document.getElementById(div).style.display = "none";
          }
      }
-     
+
     </script>
 
 
-    
+
   </x-app-layout>

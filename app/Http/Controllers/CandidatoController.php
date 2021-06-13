@@ -11,18 +11,19 @@ use App\Models\Candidato;
 use App\Models\Configuracao;
 use Illuminate\Http\Request;
 use App\Models\PostoVacinacao;
+use Illuminate\Validation\Rule;
 use App\Notifications\Reagendado;
+use App\Models\LotePostoVacinacao;
 use Illuminate\Support\Facades\DB;
 use App\Notifications\CandidatoFila;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use App\Notifications\CandidatoAprovado;
 use App\Notifications\CandidatoInscrito;
 use App\Notifications\CandidatoReprovado;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\CandidatoInscritoSegundaDose;
-use Illuminate\Validation\Rule;
-use App\Models\LotePostoVacinacao;
 
 class CandidatoController extends Controller
 {
@@ -149,21 +150,15 @@ class CandidatoController extends Controller
     public function solicitar() {
 
         // TODO: pegar só os postos com vacinas disponiveis
-        // $postos_com_vacina = PostoVacinacao::where('padrao_no_formulario', true)->get();
-        // foreach ($postos_com_vacina as $key1 => $posto) {
-        //     foreach ($posto->lotes as $key2 => $lote) {
-        //         $qtdCandidato = DB::table('candidatos')->where("posto_vacinacao_id",$posto->id)->where('lote_id', $lote->pivot->id)->count();
-        //         $qtdVacina = DB::table('lote_posto_vacinacao')->where("posto_vacinacao_id", $posto->id)->where('lote_id', $lote->id)->first()->qtdVacina;
-        //         if($qtdCandidato == $qtdVacina || $qtdVacina == $qtdCandidato + 1 ){
-        //             $postos_com_vacina->pull($key1);
-
-        //         }
-
-        //     }
-        // }
-
+        $seconds = now()->addMinutes(1);
+        // $postos_com_vacina  = Cache::remember('postos_com_vacina', $seconds, function () {
+        //                             return PostoVacinacao::where('padrao_no_formulario', true)->get();
+        //                     });
+        // $etapasAtuais   = Cache::remember('etapasAtuais', $seconds, function () {
+        //                             return Etapa::where('atual', true)->orderBy('texto')->get();
+        //                     });
         $postos_com_vacina = PostoVacinacao::where('padrao_no_formulario', true)->get();
-        $etapasAtuais = Etapa::where('atual', true)->orderBy('texto')->get();
+        $etapasAtuais   =  Etapa::where('atual', true)->orderBy('texto')->get();
         $config = Configuracao::first();
 
         if ($config->botao_solicitar_agendamento && auth()->user() == null) {
@@ -171,7 +166,7 @@ class CandidatoController extends Controller
         }
 
         $bairrosOrdenados = Candidato::bairros;
-        sort($bairrosOrdenados);
+        // sort($bairrosOrdenados);
 
         return view("form_solicitacao")->with([
             "sexos" => Candidato::SEXO_ENUM,
@@ -189,8 +184,7 @@ class CandidatoController extends Controller
     }
 
     public function enviar_solicitacao(Request $request) {
-        // dd($request->all());
-        // dd(Rule::requiredIf($request->fila));
+
         $request->validate([
             "voltou"                => "nullable",
             "público"               => "required",
@@ -216,7 +210,7 @@ class CandidatoController extends Controller
         ]);
 
         // dd($request->all());
-        // DB::beginTransaction();
+        DB::beginTransaction();
 
         try {
             if (Candidato::where('cpf',$request->cpf)->where('aprovacao','!=', Candidato::APROVACAO_ENUM[2])
@@ -312,7 +306,7 @@ class CandidatoController extends Controller
                 $candidato->aprovacao = Candidato::APROVACAO_ENUM[0];
                 $candidato->save();
                 Notification::send($candidato, new CandidatoFila($candidato));
-                // DB::commit();
+                DB::commit();
                 $agendamentos = [];
                 array_push($agendamentos, $candidato);
                 return view('comprovante')->with(['status' => 'Solicitação realizada com sucesso!',
@@ -325,9 +319,10 @@ class CandidatoController extends Controller
             $horario_vacinacao = $request->horario_vacinacao;
             $id_posto = $request->posto_vacinacao;
             $datetime_chegada = Carbon::createFromFormat("d/m/Y H:i", $dia_vacinacao . " " . $horario_vacinacao);
+            $datetime = $datetime_chegada;
             $datetime_saida = $datetime_chegada->copy()->addMinutes(10);
 
-            $candidatos_no_mesmo_horario_no_mesmo_lugar = Candidato::where("chegada", "=", $datetime_chegada)->where("posto_vacinacao_id", $id_posto)->get();
+            $candidatos_no_mesmo_horario_no_mesmo_lugar = Candidato::where("chegada", "=", $datetime)->where("posto_vacinacao_id", $id_posto)->get();
 
             if ($candidatos_no_mesmo_horario_no_mesmo_lugar->count() > 0) {
                 return redirect()->back()->withErrors([
@@ -341,7 +336,7 @@ class CandidatoController extends Controller
                 $candidato->aprovacao = Candidato::APROVACAO_ENUM[0];
                 $candidato->save();
                 Notification::send($candidato, new CandidatoFila($candidato));
-                // DB::commit();
+                DB::commit();
                 $agendamentos = [];
                 array_push($agendamentos, $candidato);
                 return view('comprovante')->with(['status' => 'Solicitação realizada com sucesso!',
@@ -380,7 +375,7 @@ class CandidatoController extends Controller
                             $candidato->aprovacao = Candidato::APROVACAO_ENUM[0];
                             $candidato->save();
                             Notification::send($candidato, new CandidatoFila($candidato));
-                            // DB::commit();
+                            DB::commit();
                             $agendamentos = [];
                             array_push($agendamentos, $candidato);
                             return view('comprovante')->with(['status' => 'Solicitação realizada com sucesso!',
@@ -409,7 +404,7 @@ class CandidatoController extends Controller
                 $candidato->aprovacao = Candidato::APROVACAO_ENUM[0];
                 $candidato->save();
                 Notification::send($candidato, new CandidatoFila($candidato));
-                // DB::commit();
+                DB::commit();
                 $agendamentos = [];
                 array_push($agendamentos, $candidato);
                 return view('comprovante')->with(['status' => 'Solicitação realizada com sucesso!',
@@ -465,10 +460,12 @@ class CandidatoController extends Controller
                 }
             }
 
-            // DB::commit();
+
+            DB::commit();
 
         } catch (\Throwable $e) {
-            // DB::rollback();
+            DB::rollback();
+
             if(env('APP_DEBUG')){
                 return redirect()->back()->withErrors([
                     "message" => $e->getMessage(),
@@ -481,11 +478,12 @@ class CandidatoController extends Controller
 
         if(!Candidato::where('cpf', $candidato->cpf)->count()){
             return redirect()->back()->withErrors([
-                "message" => "Houve algum erro, seu agendamento não, entre em contato com a administração do site.",
+                "message" => "Houve algum erro, entre em contato com a administração do site.",
             ])->withInput();
         }
 
         $agendamentos = Candidato::where('cpf', $candidato->cpf)->orderBy('dose')->get();
+
 
         return view('comprovante')->with(['status' => 'Solicitação realizada com sucesso!',
                                           'agendamentos' => $agendamentos,

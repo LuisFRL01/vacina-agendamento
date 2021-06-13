@@ -12,6 +12,7 @@ use Carbon\CarbonPeriod;
 use App\Models\Candidato;
 use App\Models\PostoVacinacao;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Gate;
 use App\Notifications\CandidatoAprovado;
 use App\Notifications\CandidatoFilaArquivo;
@@ -50,7 +51,7 @@ class FilaDistribuir extends Component
     {
         $this->validate();
         Gate::authorize('distribuir-fila');
-        set_time_limit(3600);
+        set_time_limit(900);
         // dd($this->etapa_id, $this->ponto_id);
         $candidatos = Candidato::where('aprovacao', Candidato::APROVACAO_ENUM[0])->where('etapa_id', $this->etapa_id)->oldest()->get();
         $posto = PostoVacinacao::find($this->ponto_id);
@@ -64,7 +65,7 @@ class FilaDistribuir extends Component
             foreach ($candidatos as $key => $candidato) {
 
                     $resultado = $this->agendar($horarios_agrupados_por_dia, $candidato, $posto );
-
+                    Log::info($key);
                     if ($resultado) {
                         $aprovado = true;
                         Notification::send(User::all(), new CandidatoFilaArquivo($candidato));
@@ -86,8 +87,11 @@ class FilaDistribuir extends Component
         } catch (\Throwable $th) {
             //throw $th;
             session()->flash('message',  $th->getMessage());
+            Log::info($th->getMessage());
             return;
         }
+        session()->flash('message', 'Distribuição finalizada.');
+        return;
 
     }
 
@@ -149,10 +153,7 @@ class FilaDistribuir extends Component
                             $qtd = $lote->qtdVacina - $qtdCandidato;
 
                             if ( !$lote_original->dose_unica && !($qtd >= 2) ) {
-                                continue;
-                                // return redirect()->back()->withErrors([
-                                //     'posto_vacinacao_' . $id => "Não há mais doses disponíveis."
-                                // ])->withInput();
+                                break 3;
                             }
                             break;
                         }
@@ -170,7 +171,8 @@ class FilaDistribuir extends Component
                 }
 
                 if ($id_lote == 0) { // Se é 0 é porque não tem vacinas...
-                    continue;
+                    session()->flash('message', 'Acabaram as vacinas.');
+                    break 2;
                 }
                 // dd($id_lote);
                 $candidato->posto_vacinacao_id      = $id_posto;
@@ -224,7 +226,7 @@ class FilaDistribuir extends Component
 
             // Pega os proximos 7 dias
             for($i = 0; $i < 7; $i++) {
-                $dia = Carbon::tomorrow()->addDay($i);
+                $dia = Carbon::today()->addDay($i);
 
                 // Não adiciona os dias caso não funcione nesses dias
                 if(!($posto->funciona_domingo) && $dia->isSunday()) {continue;}
@@ -248,6 +250,13 @@ class FilaDistribuir extends Component
                     $periodos_da_tarde = CarbonPeriod::create($inicio_do_dia, $posto->intervalo_atendimento_tarde . " minutes", $fim_do_dia);
                     array_push($todos_os_horarios_por_dia, $periodos_da_tarde);
                 }
+
+                if($posto->inicio_atendimento_noite && $posto->intervalo_atendimento_noite && $posto->fim_atendimento_noite) {
+                    $inicio_do_dia = $dia->copy()->addHours($posto->inicio_atendimento_noite);
+                    $fim_do_dia = $dia->copy()->addHours($posto->fim_atendimento_noite);
+                    $periodos_da_tarde = CarbonPeriod::create($inicio_do_dia, $posto->intervalo_atendimento_noite . " minutes", $fim_do_dia);
+                    array_push($todos_os_horarios_por_dia, $periodos_da_tarde);
+                }
             }
 
             // Os periodos são salvos como horarios[dia][janela]
@@ -261,16 +270,7 @@ class FilaDistribuir extends Component
             // Pega os candidatos do posto selecionado cuja data de vacinação é de amanhã pra frente, os que já passaram não importam
             $candidatos = Candidato::where("posto_vacinacao_id", $posto->id)->whereDate('chegada', '>=', Carbon::tomorrow()->toDateString())->where('aprovacao', Candidato::APROVACAO_ENUM[1])->get();
 
-            $horarios_disponiveis = [];
-
-            // Remove os horarios já agendados por outros candidados
-            foreach($todos_os_horarios as $horario) {
-                $horario_ocupado = $candidatos->contains('chegada', $horario);
-
-                if(!$horario_ocupado) {
-                    array_push($horarios_disponiveis, $horario);
-                }
-            }
+            $horarios_disponiveis = array_diff($todos_os_horarios, $candidatos->pluck('chegada')->toArray());
 
             $horarios_agrupados_por_dia = [];
 
