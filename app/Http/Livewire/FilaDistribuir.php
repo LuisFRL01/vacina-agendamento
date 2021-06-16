@@ -2,6 +2,8 @@
 
 namespace App\Http\Livewire;
 
+use Exception;
+use Throwable;
 use DateInterval;
 use Carbon\Carbon;
 use App\Models\Lote;
@@ -52,30 +54,43 @@ class FilaDistribuir extends Component
         $this->validate();
         Gate::authorize('distribuir-fila');
         set_time_limit(900);
-        // dd($this->etapa_id, $this->ponto_id);
-        $candidatos = Candidato::where('aprovacao', Candidato::APROVACAO_ENUM[0])->where('etapa_id', $this->etapa_id)->oldest()->get();
         $posto = PostoVacinacao::find($this->ponto_id);
+        $soma = 0;
+
+        foreach($posto->lotes as $key1 => $lote){
+            if($lote->pivot->qtdVacina - $posto->candidatos()->where('lote_id', $lote->pivot->id)->count() > 0 && $lote->etapas->find($this->etapa_id)){
+
+                $soma += $lote->pivot->qtdVacina - $posto->candidatos()->where('lote_id', $lote->pivot->id)->count();
+
+            }
+        }
+        // dd($posto->lotes->first()->dose_unica);
+        if($posto->lotes->first()->dose_unica == false){
+            $soma = intval($soma/2) + 1;
+        }
+        // dd($soma);
+        $candidatos = Candidato::where('aprovacao', Candidato::APROVACAO_ENUM[0])->where('etapa_id', $this->etapa_id)->oldest()->take($soma)->get();
+        // dd($candidatos->count());
         $horarios_agrupados_por_dia = $this->diasPorPosto($posto);
         if (!$horarios_agrupados_por_dia || !count($horarios_agrupados_por_dia) ) {
             session()->flash('message', 'Acabaram os horários.');
             return;
         }
         try {
+
+
             $aprovado = false;
             foreach ($candidatos as $key => $candidato) {
-
                     $resultado = $this->agendar($horarios_agrupados_por_dia, $candidato, $posto );
                     Log::info($key);
                     if ($resultado) {
                         $aprovado = true;
-                        Notification::send(User::all(), new CandidatoFilaArquivo($candidato));
                         continue;
                     }else{
                         continue;
                     }
             }
             if ($aprovado) {
-                # code...
                 session()->flash('message', 'Distribuição feita.');
                 return;
             }else{
@@ -84,11 +99,13 @@ class FilaDistribuir extends Component
 
             }
 
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             //throw $th;
             session()->flash('message',  $th->getMessage());
-            Log::info($th->getMessage());
             return;
+        } catch (Exception $e) {
+            session()->flash('message',  $e->getMessage());
+            return ;
         }
         session()->flash('message', 'Distribuição finalizada.');
         return;
@@ -96,7 +113,6 @@ class FilaDistribuir extends Component
     }
 
     public function agendar($horarios_agrupados_por_dia, $candidato, $posto) {
-
 
         // var_dump($horarios_agrupados_por_dia);
         foreach ($horarios_agrupados_por_dia as $key1 => $dia) {
@@ -108,12 +124,13 @@ class FilaDistribuir extends Component
                 $id_posto               = $posto->id;
                 $datetime_chegada       = Carbon::createFromFormat("d/m/Y H:i", $dia_vacinacao . " " . $horario_vacinacao);
                 $datetime_saida         = $datetime_chegada->copy()->addMinutes(10);
-                // dd( $datetime_chegada );
+
                 $candidatos_no_mesmo_horario_no_mesmo_lugar = Candidato::where("chegada", "=", $datetime_chegada)->where("posto_vacinacao_id", $id_posto)->get();
 
                 if ($candidatos_no_mesmo_horario_no_mesmo_lugar->count() > 0) {
                     continue;
                 }
+
                 if (Candidato::where('cpf',$candidato->cpf)->whereIn('aprovacao', [Candidato::APROVACAO_ENUM[1],Candidato::APROVACAO_ENUM[3]])
                 ->count() > 0) {
                     //\Log::info("cpf");

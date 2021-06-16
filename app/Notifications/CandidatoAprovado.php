@@ -9,13 +9,15 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class CandidatoAprovado extends Notification
+class CandidatoAprovado extends Notification implements ShouldQueue
 {
     use Queueable;
 
     public $candidato1;
     public $candidato2;
     public $data_chegada;
+    public $data_chegada1;
+    public $data_chegada2;
     public $texto;
     public $texto_dose_unica;
     public $texto_dose_dupla;
@@ -44,7 +46,7 @@ class CandidatoAprovado extends Notification
      */
     public function via($notifiable)
     {
-        return ['mail', 'database'];
+        return ['mail'];
     }
 
     /**
@@ -103,7 +105,7 @@ class CandidatoAprovado extends Notification
     public function toArray($notifiable)
     {
         return [
-            'message' => 'Condidato de ID:'. $this->candidato1->cpf. ' Aprovado'
+
         ];
     }
 
