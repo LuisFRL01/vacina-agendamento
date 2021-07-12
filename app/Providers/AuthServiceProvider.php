@@ -166,14 +166,12 @@ class AuthServiceProvider extends ServiceProvider
             return $user->tipo == User::TIPO_ENUM['secretaria'] ||
                $user->tipo == User::TIPO_ENUM['colaborador'] ||
                $user->tipo == User::TIPO_ENUM['gerente'] ||
-               $user->tipo == User::TIPO_ENUM['admin']||
-               $user->tipo == User::TIPO_ENUM['enfermeira'];
+               $user->tipo == User::TIPO_ENUM['admin'];
         });
 
         Gate::define('baixar-export', function (User $user) {
             return $user->tipo == User::TIPO_ENUM['gerente'] ||
-               $user->tipo == User::TIPO_ENUM['admin']||
-               $user->tipo == User::TIPO_ENUM['enfermeira'];
+               $user->tipo == User::TIPO_ENUM['admin'];
         });
 
         Gate::define('apagar-export', function (User $user) {
@@ -186,7 +184,6 @@ class AuthServiceProvider extends ServiceProvider
                $user->tipo == User::TIPO_ENUM['admin']||
                $user->tipo == User::TIPO_ENUM['enfermeira'];
         });
-        //fila
         //import
         Gate::define('ver-import', function (User $user) {
             return $user->tipo == User::TIPO_ENUM['secretaria'] ||
@@ -216,6 +213,11 @@ class AuthServiceProvider extends ServiceProvider
         });
 
         Gate::define('criar-fila', function (User $user) {
+            return $user->tipo == User::TIPO_ENUM['gerente'] ||
+               $user->tipo == User::TIPO_ENUM['admin'];
+        });
+
+        Gate::define('posicao-fila', function (User $user) {
             return $user->tipo == User::TIPO_ENUM['gerente'] ||
                $user->tipo == User::TIPO_ENUM['admin'];
         });
@@ -288,6 +290,17 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('reagendar', function (User $user) {
             return $user->tipo == User::TIPO_ENUM['colaborador'] ||
                $user->tipo == User::TIPO_ENUM['gerente'] ||
+               $user->tipo == User::TIPO_ENUM['admin'];
+        });
+        //Reagendar so data
+        Gate::define('reagendar-data', function (User $user) {
+            return $user->tipo == User::TIPO_ENUM['gerente'] ||
+               $user->tipo == User::TIPO_ENUM['admin'];
+        });
+
+        //horarios
+        Gate::define('horarios', function (User $user) {
+            return $user->tipo == User::TIPO_ENUM['gerente'] ||
                $user->tipo == User::TIPO_ENUM['admin'];
         });
 

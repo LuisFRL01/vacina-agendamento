@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="row">
-            <div class="col-md-9">
+            <div class="col-md-7">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                     {{ __('Lista de Pontos de Vacinação') }}
                 </h2>
@@ -13,6 +13,14 @@
                     </a>
                 @endcan
             </div>
+            {{-- <div class="col-md-2" style="text-align: right">
+
+                @can('ver-fila')
+                    <a href="{{ route('fila.index') }}" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
+                        {{ __('Fila de Espera') }}
+                    </a>
+                @endcan
+            </div> --}}
         </div>
 
     </x-slot>
@@ -34,6 +42,19 @@
                       </ul>
                   </div>
               @endif
+              <form action="{{ route('postos.index.new') }}" method="get">
+                    <select class="custom-select" name="posto[]" multiple>
+                        @foreach ($todosPosto as $posto)
+                            <option value="{{ $posto->id }}" >{{ $posto->nome }}</option>
+                        @endforeach
+                    </select>
+
+                    <button type="submit" class="btn btn-primary mt-1">
+                        Ver
+                    </button>
+
+                </form>
+                <br>
               <div class="table-responsive">
                   <table class="table table-condensed"  id="myTable">
                       <thead>
@@ -84,13 +105,13 @@
                                                 <th scope="col">Dose única</th>
                                                 <th scope="col">Tempo para a segunda dose</th>
                                                 <th scope="col">Nº de vacinas <i class="fas fa-exclamation-circle"  data-toggle="tooltip" data-placement="top" title="Quantidade de vacinas - quantidade de candidatos nesse lote = vacinas disponíveis"></i></th>
-                                                <th scope="col">Info</th>
                                                 <th scope="col" colspan="2">Ações</th>
                                               </tr>
                                             </thead>
                                             <tbody>
                                                 @php
                                                     $pivot = $lotes_pivot->where('posto_vacinacao_id', $posto->id);
+                                                    $candidatosPosto = $posto->candidatos();
                                                 @endphp
                                               @foreach ($pivot as $key => $lote_pivot)
                                               <tr>
@@ -118,7 +139,10 @@
                                                 <td>{{$lote_pivot->lote->dose_unica ? 'Sim' : 'Não'}}</td>
                                                 <td>{{$lote_pivot->lote->dose_unica ? " - " : 'Entre '.$lote_pivot->lote->inicio_periodo." à  ". $lote_pivot->lote->fim_periodo." dias" }} </td>
                                                 <td>{{($lote_pivot->qtdVacina - $posto->candidatos()->where('lote_id', $lote_pivot->id)->count())}}</td>
-                                                <td><i class="fas fa-calculator"  data-toggle="tooltip" data-placement="top" title="{{ $lote_pivot->qtdVacina ." - ". $candidatos->where('posto_vacinacao_id', $posto->id )->where('lote_id', $lote_pivot->id)->count()." = ". ( $lote_pivot->qtdVacina - $posto->candidatos()->where('lote_id', $lote_pivot->id)->count()) }}"></i></td>
+                                                {{-- <td>{{$lote_pivot->qtdVacina}}</td> --}}
+                                                {{-- <td>{{($posto->candidatos()->where('lote_id', $lote_pivot->id)->count())}}</td> --}}
+                                                {{-- <td>{{($lote_pivot->candidatos()->count() )}}</td> --}}
+
                                                 <td scope="row">
                                                   <form action="{{ route('lotes.alterarQuantidadeVacina') }}" method="post">
                                                       @csrf
@@ -146,7 +170,9 @@
 
                       </tbody>
                   </table>
-                  {{ $postos->links() }}
+
+                    {{ $postos->links() }}
+
               </div>
             </div>
         </div>

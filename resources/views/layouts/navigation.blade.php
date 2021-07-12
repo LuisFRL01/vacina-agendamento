@@ -27,11 +27,9 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Agendamentos') }}
                     </x-nav-link>
-                    @can('ver-fila')
-                    <x-nav-link :href="route('fila.index')" :active="request()->routeIs('fila.*')">
-                        {{ __('Fila de Espera') }}
-                    </x-nav-link>
-                    @endcan
+                    {{-- <x-responsive-nav-link :href="route('dashboard.novo')" :active="request()->routeIs('dashboard.*')">
+                        {{ __('Agendamentos 2') }}
+                    </x-responsive-nav-link> --}}
                     @can('ver-estatistica')
                     <x-nav-link :href="route('estatistica.index')" :active="request()->routeIs('estatistica.*')">
                         {{ __('Estatísticas') }}
@@ -40,6 +38,11 @@
                     @can('ver-export')
                     <x-nav-link :href="route('export.index')" :active="request()->routeIs('export.*')">
                         {{ __('Exportar/Importar') }}
+                    </x-nav-link>
+                    @endcan
+                    @can('horarios')
+                    <x-nav-link :href="route('horarios.index')" :active="request()->routeIs('horarios.*')">
+                        {{ __('Horários') }}
                     </x-nav-link>
                     @endcan
                     @can('ver-config')
@@ -72,6 +75,12 @@
                                 {{ __('Criar usuário') }}
                             </x-dropdown-link>
                         @endcan
+                        @can('posicao-fila')
+                            <x-dropdown-link :href="route('admin.posicao.fila')">
+                                {{ __('Posição fila') }}
+                            </x-dropdown-link>
+                        @endcan
+
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
 
@@ -115,7 +124,7 @@
             </x-responsive-nav-link>
             @endif
             @can('ver-posto')
-            <x-responsive-nav-link :href="route('postos.index')" :active="request()->routeIs('postos.*')">
+            <x-responsive-nav-link :href="route('postos.index.new')" :active="request()->routeIs('postos.*')">
                 {{ __('Pontos') }}
             </x-responsive-nav-link>
             @endif
