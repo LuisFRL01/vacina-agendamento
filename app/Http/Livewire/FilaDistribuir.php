@@ -34,6 +34,7 @@ class FilaDistribuir extends Component
     public $ponto_id;
     public $qtdFila;
     public $cpf;
+    public $bool;
 
     protected $rules = [
         'etapa_id' => 'required',
@@ -55,6 +56,7 @@ class FilaDistribuir extends Component
         $this->postos = $this->pontos;
         $this->etapas = Etapa::orderBy('texto_home')->get();
         $this->tipos = Etapa::TIPO_ENUM;
+        $this->bool = false;
 
     }
 
@@ -81,6 +83,7 @@ class FilaDistribuir extends Component
 
     public function distribuir()
     {
+        $this->reset(['bool']);
         $this->validate();
         Gate::authorize('distribuir-fila');
         set_time_limit(900);
@@ -173,13 +176,14 @@ class FilaDistribuir extends Component
 
                 if (Candidato::where('cpf',$candidato->cpf)->whereIn('aprovacao', [Candidato::APROVACAO_ENUM[1],Candidato::APROVACAO_ENUM[3]])
                 ->count() > 0) {
-                    //\Log::info("cpf");
+                    \Log::info("1");
                     break 2;
                 }
 
                 $etapa = $candidato->etapa;
 
                 if(!$etapa->lotes->count()){
+                    \Log::info("2");
                     break 2;
                 }
                 //Retorna um array de IDs do lotes associados a etapa escolhida
@@ -210,8 +214,10 @@ class FilaDistribuir extends Component
                             $qtd = $lote->qtdVacina - $qtdCandidato;
 
                             if ( !$lote_original->dose_unica && !($qtd >= 2) ) {
+                                \Log::info("3");
                                 break 3;
                             }
+                            \Log::info("4");
                             break;
                         }
 
@@ -221,6 +227,8 @@ class FilaDistribuir extends Component
                         if ($qtdCandidato < $lote->qtdVacina) {
                             $id_lote = $lote->id;
                             $chave_estrangeiro_lote = $lote->lote_id;
+                            $candidato->dose = "Dose única";
+                            \Log::info("5");
                             break;
                         }
                     }
@@ -229,6 +237,7 @@ class FilaDistribuir extends Component
 
                 if ($id_lote == 0) { // Se é 0 é porque não tem vacinas...
                     session()->flash('message', 'Acabaram as vacinas.');
+                    \Log::info("6");
                     break 2;
                 }
                 // dd($id_lote);
@@ -245,8 +254,8 @@ class FilaDistribuir extends Component
                 if (!$lote->dose_unica) {
                     \Log::info("candidato segundo");
                     $datetime_chegada_segunda_dose = $candidato->chegada->add(new DateInterval('P'.$lote->inicio_periodo.'D'));
-                    if($datetime_chegada_segunda_dose->format('l') == "Sunday"){
-                        $datetime_chegada_segunda_dose->add(new DateInterval('P1D'));
+                    if($datetime_chegada_segunda_dose->format('l') == "Sunday" || $datetime_chegada_segunda_dose->format('l') == "Saturday"){
+                        $datetime_chegada_segunda_dose->add(new DateInterval('P3D'));
                     }
                     $candidatoSegundaDose = $candidato->replicate()->fill([
                         'aprovacao' =>  Candidato::APROVACAO_ENUM[1],
@@ -261,18 +270,17 @@ class FilaDistribuir extends Component
                 if($candidato->email != null || $candidato->email != ""  || $candidato->email != " "){
                     Notification::send($candidato, new CandidatoAprovado($candidato, $candidatoSegundaDose,$lote));
                 }
-                \Log::info("user: ".$candidato->chegada);
                 $posto->dias->where('dia', $datetime_chegada->copy()->startOfDay())->first()->horarios->where('horario', $datetime_chegada)->first()->delete();
                 $posto->refresh();
 
                 unset($dia[$key2]);
-
+                \Log::info("true");
                 return true;
 
             }
             unset($horarios_agrupados_por_dia[$key1]);
         }
-
+        \Log::info("false");
         return false;
 
     }

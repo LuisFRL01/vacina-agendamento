@@ -28,30 +28,10 @@ use App\Http\Controllers\PostoVacinacaoController;
 */
 
 Route::get('/', [WelcomeController::class, 'index'])->name('index');
+Route::get('/home/estatisticas', [WelcomeController::class, 'estatisticas'])->name('home.estatisticas');
+Route::get('/manutencao', [WelcomeController::class, 'manutencao'])->name('manutencao');
 
-Route::get('/teste', function() {
-    DB::enableQueryLog();
-    $result = DB::select(DB::raw('select p.nome, lp.posto_vacinacao_id, "qtdVacina", count(c.*) as "Quantidade de candidatos", ("qtdVacina" - count(c.*)) as "Vacinas disponiveis",lp.id as "lote_pivot_id"
-    from posto_vacinacaos p
-    inner join lote_posto_vacinacao lp
-    on p.id = lp.posto_vacinacao_id
-    inner join candidatos c
-    on c.lote_id = lp.id
-    group by lp.id, "qtdVacina", lp.posto_vacinacao_id, p.nome;'));
-    // $result = DB::select(DB::raw('select   nome_completo,count(nome_completo) as "QUANTIDAD DE REGISTROS" ,cpf
-    // from candidatos
-    // where cpf in
-    //     (select c.cpf
-    //     from candidatos c
-    //     group by c.cpf
-    //     having count(cpf) > 2)
-    // group by nome_completo, cpf'));
 
-    return response($result );
-
-    // return view('sobre');
-
-});
 
 Route::get("/solicitar", [CandidatoController::class, 'solicitar'])->name("solicitacao.candidato");
 Route::post("/solicitar/enviar", [CandidatoController::class, 'enviar_solicitacao'])->name("solicitacao.candidato.enviar");
@@ -71,6 +51,36 @@ Route::get("/anexo/{name}", [WelcomeController::class, 'baixarAnexo'])->name('ba
 Route::get('/sobre', [WelcomeController::class, 'sobre'])->name('sobre');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/teste', function() {
+        DB::enableQueryLog();
+        // $result = DB::select(DB::raw('select p.nome, lp.posto_vacinacao_id, "qtdVacina", count(c.*) as "Quantidade de candidatos", ("qtdVacina" - count(c.*)) as "Vacinas disponiveis",lp.id as "lote_pivot_id"
+        // from posto_vacinacaos p
+        // inner join lote_posto_vacinacao lp
+        // on p.id = lp.posto_vacinacao_id
+        // inner join candidatos c
+        // on c.lote_id = lp.id
+        // group by lp.id, "qtdVacina", lp.posto_vacinacao_id, p.nome;'));
+        $result = DB::select(DB::raw('select   nome_completo, deleted_at, count(nome_completo) as "QUANTIDAD DE REGISTROS" ,cpf
+        from candidatos
+        where cpf in
+            (select c.cpf
+            from candidatos c
+            group by c.cpf
+            having count(cpf) > 2) 
+        group by nome_completo, deleted_at,cpf'));
+        // $result = DB::table('candidatos')->select(DB::raw('count("cpf"), nome_completo, chegada'))
+        //                                  ->groupBy('cpf', 'nome_completo', 'chegada')
+        //                                  ->having('cpf', '>=', 2)
+        //                                  ->whereMonth('chegada','8')
+        //                                  ->get();
+
+        
+    
+        return response($result );
+    
+        // return view('sobre');
+    
+    });
     Route::get("/real", function() {
 
         return view('fila.fila_tempo_real');
@@ -79,6 +89,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/form',  [AdminController::class, 'userForm'])->name('admin.form.user');
     Route::post('/admin/create/user',  [AdminController::class, 'createUser'])->name('admin.create.user');
     Route::get('/admin/posicao/fila',  [AdminController::class, 'posicaoFila'])->name('admin.posicao.fila');
+    Route::get('/admin/lista/editar',  [AdminController::class, 'editarListaData'])->name('admin.editar.lista.data');
+    Route::post('/admin/lista/update',  [AdminController::class, 'updateListaData'])->name('admin.update.lista.data');
+    Route::get('/admin/arquivados/index', function(){ return view('admin.arquivados'); })->name('admin.arquivados.index');
+    Route::get('/admin/arquivados/ponto',  [AdminController::class, 'arquivadosPonto'])->name('admin.ponto.arquivados');
 
     Route::get('/dashboard',  [CandidatoController::class, 'show'])->name('dashboard');
     Route::post("/agendamento/{id}/confirmacao", [CandidatoController::class, 'update'])->name("update.agendamento");
@@ -140,6 +154,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/horarios/delete/{posto_id}/{dia_id}', [HorarioController::class, 'delete'])->name('horarios.delete');
 
     Route::get('/posto/gerador/{id?}', [PostoVacinacaoController::class, 'geradorHorarios'])->name('posto.geradorHorarios');
+    Route::post('/posto/arquivar/{id}/{status}', [PostoVacinacaoController::class, 'arquivar'])->name('postos.arquivar');
 
     Route::get('/posto/dias-disponiveis', [PostoVacinacaoController::class, 'diasPorPosto'])->name('dias.posto.ajax');
     Route::post('/agentamento/{id}/reagendar', [CandidatoController::class, 'reagendar'])->name('agendamento.posto.update');

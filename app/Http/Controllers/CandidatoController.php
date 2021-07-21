@@ -42,7 +42,7 @@ class CandidatoController extends Controller
         }else if ($request->tipo == "Vacinado") {
             $query = Candidato::query()->where('aprovacao', Candidato::APROVACAO_ENUM[3]);
         }else{
-            $query = Candidato::query()->whereIn('aprovacao', [Candidato::APROVACAO_ENUM[1], Candidato::APROVACAO_ENUM[3]]);
+            $query = Candidato::query()->whereIn('aprovacao', [Candidato::APROVACAO_ENUM[1]]);
         }
 
         if ($request->nome_check && $request->nome != null) {
@@ -61,6 +61,23 @@ class CandidatoController extends Controller
             $amanha = (new Carbon($request->data))->addDays(1);
             $hoje = (new Carbon($request->data));
             $query->where([['chegada','>=',$hoje], ['chegada','<=', $amanha]]);
+        }
+        if ($request->mes_check && $request->mes != null) {
+            $mes0 = (new Carbon($request->mes))->format('m');
+            $query->whereMonth('chegada',$mes0);
+            // if(count($request->mes) == 2 && $request->mes[1] == null){
+                //     $mes0 = (new Carbon($request->mes[0]))->format('m');
+                //     $query->whereMonth('chegada', (new Carbon($request->mes[0]))->format('m'));
+            // }elseif(count($request->mes) == 2 && $request->mes[1] != null){
+            //     $mes0 = (new Carbon($request->mes[0]))->format('m');
+            //     $mes1 = (new Carbon($request->mes[1]))->format('m');
+            //     // $query->whereRaw('extract(month from chegada) = ?', [$mes0])
+            //     //       ->orwhereRaw('extract(month from chegada) = ?', [$mes1]);
+            //     // $query->whereMonth('chegada', [(new Carbon($request->mes[0]))->format('m'), (new Carbon($request->mes[1]))->format('m')]);
+            //     $query->whereMonth('chegada','=',$mes0)
+            //           ->orwhereMonth('chegada','=',$mes1);
+
+            // }
         }
         if ($request->data_vacinado_check && $request->data_vacinado != null) {
             $amanha = (new Carbon($request->data_vacinado))->addDays(1);
@@ -389,6 +406,7 @@ class CandidatoController extends Controller
                     if ($qtdCandidato < $lote->qtdVacina) {
                         $id_lote = $lote->id;
                         $chave_estrangeiro_lote = $lote->lote_id;
+                        $candidato->dose = "Dose única";
                         break;
                     }
                 }
@@ -426,8 +444,8 @@ class CandidatoController extends Controller
 
             if (!$lote->dose_unica) {
                 $datetime_chegada_segunda_dose = $candidato->chegada->add(new DateInterval('P'.$lote->inicio_periodo.'D'));
-                if($datetime_chegada_segunda_dose->format('l') == "Sunday"){
-                    $datetime_chegada_segunda_dose->add(new DateInterval('P1D'));
+                if($datetime_chegada_segunda_dose->format('l') == "Sunday" || $datetime_chegada_segunda_dose->format('l') == "Saturday"){
+                    $datetime_chegada_segunda_dose->add(new DateInterval('P3D'));
                 }
                 $candidatoSegundaDose = $candidato->replicate()->fill([
                     'chegada' =>  $datetime_chegada_segunda_dose,
@@ -913,29 +931,43 @@ class CandidatoController extends Controller
     public function form_edit($id) {
         Gate::authorize('editar-candidato');
         $candidato = Candidato::find($id);
+        $candidatos = Candidato::where('cpf', $candidato->cpf)->orderBy('dose')->get();
 
-        return view('candidato.editar_data', compact('candidato'));
+        return view('candidato.editar_data', compact('candidatos'));
     }
 
     public function editarData(Request $request, $id)
     {
         try {
             Gate::authorize('editar-candidato');
+            DB::beginTransaction();
 
-            $candidato = Candidato::find($id);
-            if($candidato->dose != "2ª Dose" || $candidato->aprovacao != "Aprovado"){
+            $candidato1 = Candidato::find($id);
+
+            if($candidato1->aprovacao != "Aprovado"){
                 return back()->with(['message' => "Não permitido"]);
             }
-            $candidato->update([
+            $candidato1->update([
                 'chegada'         => $request->chegada,
-                'saida'         => $candidato->chegada->copy()->modify('+2 minutes'),
+                'saida'         => $candidato1->chegada->copy()->modify('+2 minutes'),
             ]);
-
-            if($candidato->email != null){
-                Notification::send($candidato, new CandidatoAtualizado($candidato));
+            if($candidato1->dose == "1ª Dose" && Candidato::where('cpf',$candidato1->cpf)->where('id', '!=',$id)->first() != null){
+                $lote = LotePostoVacinacao::findOrFail($candidato1->lote_id)->lote;
+                $candidato2 = Candidato::where('cpf',$candidato1->cpf)->where('id', '!=',$id)->first();
+                $datetime_chegada_segunda_dose = $candidato1->chegada->add(new DateInterval('P'.$lote->inicio_periodo.'D'));
+                // dd($datetime_chegada_segunda_dose);
+                $candidato2->update([
+                    'chegada'         => $datetime_chegada_segunda_dose,
+                    'saida'         => $datetime_chegada_segunda_dose->copy()->modify('+2 minutes'),
+                ]);
             }
+
+            if($candidato1->email != null){
+                Notification::send($candidato1, new CandidatoAtualizado($candidato1));
+            }
+            DB::commit();
             if ($request->session()->has('candidato_url')) {
-                session(['candidato_id' => $candidato->id]);
+                session(['candidato_id' => $candidato1->id]);
 
                 return redirect(session('candidato_url', 'dashboard'))->with(['message' => "Atualizado com sucesso"]);
 
@@ -944,6 +976,7 @@ class CandidatoController extends Controller
 
             return back()->with(['message' => "Atualizado com sucesso"]);
         } catch (\Throwable $th) {
+            DB::rollBack();
             return back()->with(['message' => $th->getMessage()]);
         }
     }

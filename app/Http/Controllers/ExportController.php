@@ -88,6 +88,10 @@ class ExportController extends Controller
             $hoje = (new Carbon($request->data_vacinado));
             $query->where([['updated_at','>=',$hoje], ['updated_at','<=', $amanha]]);
         }
+        if ($request->mes_check && $request->mes != null) {
+            $mes0 = (new Carbon($request->mes))->format('m');
+            $query->whereMonth('chegada',$mes0);
+        }
         if ($request->data_check && $request->data != null) {
             $amanha = (new Carbon($request->data))->addDays(1);
             $hoje = (new Carbon($request->data));
@@ -133,8 +137,15 @@ class ExportController extends Controller
         if ($request->outro) {
             $agendamentos = $query->take(1000)->get();
         } else {
-            $agendamentos = $query->take(1000)->get();
+            if($request->posicao_check) {
+
+                $agendamentos = $query->oldest()->take(1000)->get();
+            }else{
+                $agendamentos = $query->take(1000)->get();
+            }
         }
+
+
 
         if ($request->outro) {
             $agendamentosComOutrasInfo = collect();
@@ -169,7 +180,7 @@ class ExportController extends Controller
     {
         // dd( array_column(json_decode($request->candidatos), 'id')  );
         $ids = array_column(json_decode($request->candidatos), 'id');
-        $nome_arquivo = $request->nome_arquivo ? $request->nome_arquivo : 'postosCandidato.xlsx';
+        $nome_arquivo = $request->nome_arquivo ? $request->nome_arquivo : 'agendamentos.xlsx';
         $caraceteres = array("-", "/", ".", "*", "@", "$", "%", "&", ")", "(");
         $nome_arquivo = str_replace($caraceteres, "", $nome_arquivo);
         $candidatos = Candidato::withTrashed()->whereIn('id', $ids)->take(1000)->get();
