@@ -15,11 +15,13 @@ use App\Models\Candidato;
 use App\Models\PostoVacinacao;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use App\Notifications\CandidatoAprovado;
+use App\Notifications\ReportNotification;
 use App\Notifications\CandidatoFilaArquivo;
-use Illuminate\Support\Facades\Notification;
 use App\Http\Traits\HorariosAgrupadosPorDia;
+use Illuminate\Support\Facades\Notification;
 
 class FilaDistribuir extends Component
 {
@@ -52,7 +54,7 @@ class FilaDistribuir extends Component
 
     public function mount()
     {
-        $this->pontos = PostoVacinacao::orderBy('nome')->get();
+        $this->pontos = PostoVacinacao::where('status', '!=', 'arquivado')->orderBy('nome')->get();
         $this->postos = $this->pontos;
         $this->etapas = Etapa::orderBy('texto_home')->get();
         $this->tipos = Etapa::TIPO_ENUM;
@@ -110,9 +112,8 @@ class FilaDistribuir extends Component
         }
         try {
 
-            Log::info($qtdVacinaPorPonto);
-            Log::info($candidatos->count());
             $aprovado = false;
+            $contadorAprovado = 0;
             $contadorParada = 0;
             foreach ($candidatos as $key => $candidato) {
                     $resultado = $this->agendar($horarios_agrupados_por_dia, $candidato, $posto );
@@ -120,6 +121,7 @@ class FilaDistribuir extends Component
 
                     if ($resultado) {
                         Log::info($key);
+                        $contadorAprovado++;
                         $aprovado = true;
                         continue;
                     }else{
@@ -132,6 +134,7 @@ class FilaDistribuir extends Component
                     }
             }
             $this->reset('cpf');
+            Notification::send(Auth::user(), new ReportNotification($contadorAprovado, Etapa::find( $this->etapa_id)->texto_home, $posto->nome));
             \Log::info("acabou");
             if ($aprovado) {
                 session()->flash('message', 'Distribuição concluída com sucesso.');
@@ -255,7 +258,7 @@ class FilaDistribuir extends Component
                     \Log::info("candidato segundo");
                     $datetime_chegada_segunda_dose = $candidato->chegada->add(new DateInterval('P'.$lote->inicio_periodo.'D'));
                     if($datetime_chegada_segunda_dose->format('l') == "Sunday" || $datetime_chegada_segunda_dose->format('l') == "Saturday"){
-                        $datetime_chegada_segunda_dose->add(new DateInterval('P3D'));
+                        $datetime_chegada_segunda_dose->add(new DateInterval('P2D'));
                     }
                     $candidatoSegundaDose = $candidato->replicate()->fill([
                         'aprovacao' =>  Candidato::APROVACAO_ENUM[1],

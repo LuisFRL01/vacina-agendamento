@@ -20,15 +20,28 @@
                 </div>
             </div>
         @endif
-        <div class="row">
-            <div class="col">
-                <a href="{{ route('config.gerar.horarios') }}" class="btn btn-primary">
-                    Gerar horários
-                </a>
+        @can('ver-relatorios')
+            <div class="row">
+                <div class="col">
+                    <a href="{{ route('relatorios.index') }}" class="btn btn-primary">
+                        Relatórios
+                    </a>
+                </div>
             </div>
-        </div>
-        <br>
-        <hr>
+            <br>
+            <hr>
+        @endcan
+        @can('ver-notificacoes')
+            <div class="row">
+                <div class="col">
+                    <a href="{{ route('notifications.index') }}" class="btn btn-primary">
+                        Notificaticações
+                    </a>
+                </div>
+            </div>
+            <br>
+            <hr>
+        @endcan
         <br>
         <form action="{{route('config.update')}}" method="GET">
             <div class="row">

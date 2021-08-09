@@ -17,13 +17,14 @@ use App\Notifications\Reagendado;
 use App\Models\LotePostoVacinacao;
 use Illuminate\Support\Facades\DB;
 use App\Notifications\CandidatoFila;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use App\Notifications\CandidatoAprovado;
 use Illuminate\Support\Facades\Response;
-use App\Notifications\CandidatoAtualizado;
 use App\Notifications\CandidatoReprovado;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\Validator;
+use App\Notifications\CandidatoAtualizado;
 use Illuminate\Support\Facades\Notification;
 
 class CandidatoController extends Controller
@@ -42,7 +43,7 @@ class CandidatoController extends Controller
         }else if ($request->tipo == "Vacinado") {
             $query = Candidato::query()->where('aprovacao', Candidato::APROVACAO_ENUM[3]);
         }else{
-            $query = Candidato::query()->whereIn('aprovacao', [Candidato::APROVACAO_ENUM[1]]);
+            $query = Candidato::query()->whereIn('aprovacao', [Candidato::APROVACAO_ENUM[3] , Candidato::APROVACAO_ENUM[1]]);
         }
 
         if ($request->nome_check && $request->nome != null) {
@@ -152,7 +153,7 @@ class CandidatoController extends Controller
         return view('dashboard2')->with(['candidatos' => $agendamentos,
                                         'candidato_enum' => Candidato::APROVACAO_ENUM,
                                         'tipos' => Etapa::TIPO_ENUM,
-                                        'postos' => PostoVacinacao::all(),
+                                        'postos' => PostoVacinacao::where('status', '!=', 'arquivado')->get(),
                                         'doses' => Candidato::DOSE_ENUM,
                                         'publicos' => Etapa::orderBy('texto_home')->get(),
                                         'request' => $request]);
@@ -445,7 +446,7 @@ class CandidatoController extends Controller
             if (!$lote->dose_unica) {
                 $datetime_chegada_segunda_dose = $candidato->chegada->add(new DateInterval('P'.$lote->inicio_periodo.'D'));
                 if($datetime_chegada_segunda_dose->format('l') == "Sunday" || $datetime_chegada_segunda_dose->format('l') == "Saturday"){
-                    $datetime_chegada_segunda_dose->add(new DateInterval('P3D'));
+                    $datetime_chegada_segunda_dose->add(new DateInterval('P2D'));
                 }
                 $candidatoSegundaDose = $candidato->replicate()->fill([
                     'chegada' =>  $datetime_chegada_segunda_dose,
@@ -534,6 +535,9 @@ class CandidatoController extends Controller
         if($request->confirmacao == "Ausente"){
             $candidato = Candidato::find($id);
             if ($candidato != null) {
+                if($candidato->email != null){
+                    // Notification::send($candidato, new CandidatoReprovado($candidato, Auth::user()->email));
+                }
                 Candidato::where('id',$id)->update(['aprovacao' => "Reprovado"]);
                 Candidato::where('id',$id)->delete();
                 // Candidato::where('cpf',$candidato->cpf)->update(['aprovacao' => "Reprovado"]);
@@ -559,7 +563,7 @@ class CandidatoController extends Controller
                         ->update(['aprovacao' => "Reprovado"]);
 
                 if($candidato->email != null){
-                    Notification::send($candidato, new CandidatoReprovado($candidato));
+                    Notification::send($candidato, new CandidatoReprovado($candidato, Auth::user()->email));
                 }
                 Candidato::where('cpf',$candidato->cpf)->where('nome_completo',$candidato->nome_completo)->delete();
 

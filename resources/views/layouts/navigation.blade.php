@@ -35,6 +35,11 @@
                         {{ __('Estatísticas') }}
                     </x-nav-link>
                     @endcan
+                    @can('ver-estatistica-ponto')
+                    <x-nav-link :href="route('estatistica.showStats')" :active="request()->routeIs('estatistica.*')">
+                        {{ __('Estatísticas Ponto') }}
+                    </x-nav-link>
+                    @endcan
                     @can('ver-export')
                     <x-nav-link :href="route('export.index')" :active="request()->routeIs('export.*')">
                         {{ __('Exportar/Importar') }}
@@ -73,6 +78,11 @@
                         @can('criar-user')
                             <x-dropdown-link :href="route('admin.form.user')">
                                 {{ __('Criar usuário') }}
+                            </x-dropdown-link>
+                        @endcan
+                        @can('criar-user')
+                            <x-dropdown-link :href="route('admin.list.user')">
+                                {{ __('Editar usuários') }}
                             </x-dropdown-link>
                         @endcan
                         @can('posicao-fila')
@@ -144,6 +154,11 @@
             <x-responsive-nav-link :href="route('fila.index')" :active="request()->routeIs('fila.*')">
                 {{ __('Fila de Espera') }}
             </x-responsive-nav-link>
+            @can('horarios')
+            <x-responsive-nav-link :href="route('horarios.index')" :active="request()->routeIs('horarios.*')">
+                {{ __('Horários') }}
+            </x-responsive-nav-link>
+            @endcan
             @can('ver-export')
             <x-responsive-nav-link :href="route('export.index')" :active="request()->routeIs('export.*')">
                 {{ __('Exportar/Importar') }}
