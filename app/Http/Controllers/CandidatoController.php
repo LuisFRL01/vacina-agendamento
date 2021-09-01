@@ -536,7 +536,7 @@ class CandidatoController extends Controller
             $candidato = Candidato::find($id);
             if ($candidato != null) {
                 if($candidato->email != null){
-                    // Notification::send($candidato, new CandidatoReprovado($candidato, Auth::user()->email));
+                    Notification::send($candidato, new CandidatoReprovado($candidato, Auth::user()->email));
                 }
                 Candidato::where('id',$id)->update(['aprovacao' => "Reprovado"]);
                 Candidato::where('id',$id)->delete();
@@ -666,6 +666,14 @@ class CandidatoController extends Controller
         $agendamentos = Candidato::where([['cpf', $request->cpf], ['data_de_nascimento', $request->data_de_nascimento]])
                       ->orderBy("dose") // Mostra primeiro o agendamento mais recente
                       ->get();
+
+        if ($agendamentos->count() == 0) {
+            $caracteres = array(".", "-");
+            $cpf = str_replace($caracteres, "", $request->cpf);
+            $agendamentos = Candidato::where([['cpf', $cpf], ['data_de_nascimento', $request->data_de_nascimento]])
+                      ->orderBy("dose") // Mostra primeiro o agendamento mais recente
+                      ->get();
+        }              
 
         if ($agendamentos->count() == 0) {
             return redirect()->back()->withErrors([
