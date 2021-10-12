@@ -37,6 +37,7 @@ class FilaDistribuir extends Component
     public $qtdFila;
     public $cpf;
     public $bool;
+    public $dose;
 
     protected $rules = [
         'etapa_id' => 'required',
@@ -59,6 +60,7 @@ class FilaDistribuir extends Component
         $this->etapas = Etapa::orderBy('texto_home')->get();
         $this->tipos = Etapa::TIPO_ENUM;
         $this->bool = false;
+        $this->qtdFila = 1;
 
     }
 
@@ -91,18 +93,27 @@ class FilaDistribuir extends Component
         set_time_limit(900);
         $posto = PostoVacinacao::find($this->ponto_id);
 
-        $qtdVacinaPorPonto = $this->quantidadeVacinaPorPonto($posto);
+        // $qtdVacinaPorPonto = $this->quantidadeVacinaPorPonto($posto);
         if ($this->qtdFila == null) {
-            $this->qtdFila = $qtdVacinaPorPonto;
+            // $this->qtdFila = $qtdVacinaPorPonto;
+            session()->flash('message',  "Sem quantidade de pessoas para andar");
+            return;
         }
         // dd($this->cpf);
+        $dose = ["1ª Dose", '2ª Dose', "Dose única"];
+        if ($this->dose != null) {
+            $dose = ["3ª Dose"];
+        }
+       
         if ($this->cpf != null) {
-            $candidatos = Candidato::where('aprovacao', Candidato::APROVACAO_ENUM[0])->where('etapa_id', $this->etapa_id)->where('cpf', $this->cpf)->get();
+            $candidatos = Candidato::where('aprovacao', Candidato::APROVACAO_ENUM[0])->where('etapa_id', $this->etapa_id)->whereIn('dose', $dose)->where('cpf', $this->cpf)->get();
         }else{
-            $candidatos = Candidato::where('aprovacao', Candidato::APROVACAO_ENUM[0])->where('etapa_id', $this->etapa_id)->oldest()->take($this->qtdFila)->get();
+            $candidatos = Candidato::where('aprovacao', Candidato::APROVACAO_ENUM[0])
+                                    ->where('etapa_id', $this->etapa_id)
+                                    ->whereIn('dose', $dose)->oldest()
+                                    ->take($this->qtdFila)->get();
 
         }
-
 
         $horarios_agrupados_por_dia = $this->traitHorarios($posto->id);
 
@@ -137,7 +148,7 @@ class FilaDistribuir extends Component
             Notification::send(Auth::user(), new ReportNotification($contadorAprovado, Etapa::find( $this->etapa_id)->texto_home, $posto->nome));
             \Log::info("acabou");
             if ($aprovado) {
-                session()->flash('message', 'Distribuição concluída com sucesso.');
+                session()->flash('message', 'Distribuição concluída com sucesso. Quantidade Aprovado:' . $contadorAprovado);
                 return;
             }else{
                 session()->flash('message', 'Ninguém foi distribuído.');
@@ -176,12 +187,20 @@ class FilaDistribuir extends Component
                 // if ($candidatos_no_mesmo_horario_no_mesmo_lugar->count() > 0) {
                 //     continue;
                 // }
-
-                if (Candidato::where('cpf',$candidato->cpf)->whereIn('aprovacao', [Candidato::APROVACAO_ENUM[1],Candidato::APROVACAO_ENUM[3]])
-                ->count() > 0) {
-                    \Log::info("1");
-                    break 2;
+                if($candidato->dose != "3ª Dose"){
+                    if (Candidato::where('cpf',$candidato->cpf)->whereIn('aprovacao', [Candidato::APROVACAO_ENUM[1],Candidato::APROVACAO_ENUM[3]])
+                    ->count() > 0 && $candidato->dose != "3ª Dose") {
+                        \Log::info("0");
+                        break 2;
+                    }
+                }else{
+                    if (Candidato::where('cpf',$candidato->cpf)->where('dose', "3ª Dose")->whereIn('aprovacao', [Candidato::APROVACAO_ENUM[1],Candidato::APROVACAO_ENUM[3]])
+                    ->count() > 0 ) {
+                        \Log::info("0");
+                        break 2;
+                    }
                 }
+                
 
                 $etapa = $candidato->etapa;
 
@@ -230,7 +249,11 @@ class FilaDistribuir extends Component
                         if ($qtdCandidato < $lote->qtdVacina) {
                             $id_lote = $lote->id;
                             $chave_estrangeiro_lote = $lote->lote_id;
-                            $candidato->dose = "Dose única";
+                            if($candidato->dose == "3ª Dose"){
+                                $candidato->dose = "3ª Dose";
+                            }else{
+                                $candidato->dose = "Dose única";
+                            }
                             \Log::info("5");
                             break;
                         }
@@ -254,21 +277,23 @@ class FilaDistribuir extends Component
                 $candidato->aprovacao = Candidato::APROVACAO_ENUM[1];
                 $candidato->update();
                 $candidatoSegundaDose = null;
-                if (!$lote->dose_unica) {
-                    \Log::info("candidato segundo");
-                    $datetime_chegada_segunda_dose = $candidato->chegada->add(new DateInterval('P'.$lote->inicio_periodo.'D'));
-                    if($datetime_chegada_segunda_dose->format('l') == "Sunday" || $datetime_chegada_segunda_dose->format('l') == "Saturday"){
-                        $datetime_chegada_segunda_dose->add(new DateInterval('P2D'));
+                if($candidato->dose != "3ª Dose"){
+                    if (!$lote->dose_unica) {
+                        \Log::info("candidato segundo");
+                        $datetime_chegada_segunda_dose = $candidato->chegada->add(new DateInterval('P'.$lote->inicio_periodo.'D'));
+                        if($datetime_chegada_segunda_dose->format('l') == "Sunday" || $datetime_chegada_segunda_dose->format('l') == "Saturday"){
+                            $datetime_chegada_segunda_dose->add(new DateInterval('P2D'));
+                        }
+                        $candidatoSegundaDose = $candidato->replicate()->fill([
+                            'aprovacao' =>  Candidato::APROVACAO_ENUM[1],
+                            'chegada' =>  $datetime_chegada_segunda_dose,
+                            'saida'   =>  $datetime_chegada_segunda_dose->copy()->addMinutes(10),
+                            'dose'   =>  Candidato::DOSE_ENUM[1],
+                        ]);
+    
+                        $candidatoSegundaDose->save();
+    
                     }
-                    $candidatoSegundaDose = $candidato->replicate()->fill([
-                        'aprovacao' =>  Candidato::APROVACAO_ENUM[1],
-                        'chegada' =>  $datetime_chegada_segunda_dose,
-                        'saida'   =>  $datetime_chegada_segunda_dose->copy()->addMinutes(10),
-                        'dose'   =>  Candidato::DOSE_ENUM[1],
-                    ]);
-
-                    $candidatoSegundaDose->save();
-
                 }
                 if($candidato->email != null || $candidato->email != ""  || $candidato->email != " "){
                     Notification::send($candidato, new CandidatoAprovado($candidato, $candidatoSegundaDose,$lote));

@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use DateTime;
 use App\Models\Etapa;
 use App\Models\Candidato;
-use App\Models\PostoVacinacao;
 use App\Models\OpcoesEtapa;
+use Illuminate\Http\Request;
+use App\Models\PostoVacinacao;
 use App\Models\OutrasInfoEtapa;
 use Illuminate\Support\Facades\Gate;
 
@@ -48,7 +49,7 @@ class EtapaController extends Controller
     public function store(Request $request)
     {
         Gate::authorize('criar-etapa');
-        // dd($request);
+        
         $validated = $request->validate([
             'tipo'                => 'required',
             'texto_do_agendamento'=> 'required|max:100',
@@ -81,6 +82,11 @@ class EtapaController extends Controller
             $etapa->atual = false;
         }
 
+        if ($request->dose_tres != null) {
+            $etapa->dose_tres = true;
+        } else {
+            $etapa->dose_tres = false;
+        }
         if ($request->exibir_no_form != null) {
             $etapa->exibir_no_form = true;
         } else {
@@ -185,7 +191,7 @@ class EtapaController extends Controller
     public function update(Request $request, $id)
     {
         Gate::authorize('editar-etapa');
-
+        // dd($request->all());
         $validated = $request->validate([
             'tipo'                => 'required',
             'texto_do_agendamento'=> 'required|max:100',
@@ -256,11 +262,29 @@ class EtapaController extends Controller
         if ($request->texto_das_outras_informações != null) {
             $etapa->texto_outras_informacoes = $request->texto_das_outras_informações;
         }
+        if ($request->numero_dias != null) {
+            $etapa->numero_dias = $request->numero_dias;
+        }
+        if ($request->intervalo_reforco != null) {
+            $etapa->intervalo_reforco = new DateTime($request->intervalo_reforco);
+        }
+        
+        if ($request->isDias != null) {
+            $etapa->isDias = true;
+        } else {
+            $etapa->isDias = false;
+        }
 
         if ($request->atual != null) {
             $etapa->atual = true;
         } else {
             $etapa->atual = false;
+        }
+
+        if ($request->dose_tres != null) {
+            $etapa->dose_tres = true;
+        } else {
+            $etapa->dose_tres = false;
         }
 
         if ($request->exibir_no_form != null) {

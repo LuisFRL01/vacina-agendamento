@@ -18,6 +18,30 @@
                     </div>
                 @endif
                 <div class="row">
+                    <div class="col-md-12 ">
+                        <div class="mb-2 mt-4">
+                            <label for="isDias" >Marque para caso seja número de dias e desmarque caso seja por data:</label>
+                            <input id="isDias" type="checkbox" name="isDias" @if(old('isDias') || (old('isDias') == null && $publico->isDias)) checked @endif>
+                        </div>
+                        
+                    </div>
+                    <div class="col-md-6 " id="numero_dias" @if (!$publico->isDias) style="display:none" @endif>
+                        <label for="numero_dias" >Número de dias entre a D2 e D3</label>
+                        <input  class="form-control" type="number"  name="numero_dias" value="{{$publico->numero_dias}}" >
+                        
+                    </div>
+                    <div class="col-md-6" id="intervalo_reforco" @if ($publico->isDias) style="display:none" @endif>
+                        <label for="intervalo_reforco" >Definir data limite para segunda dose</label>
+                        <input  class="form-control" type="date"  name="intervalo_reforco" value="{{date('Y-m-d',strtotime($publico->intervalo_reforco) )}}" >
+                        
+                    </div>
+                    <div class="col-md-12 mt-2 mb-5">
+                        <div class="mb-2 mt-4">
+                            <label for="dose_tres" >Exibir público no agendamento na dose de Reforço</label>
+                            <input id="dose_tres" type="checkbox" name="dose_tres" @if(old('dose_tres') || (old('dose_tres') == null && $publico->dose_tres)) checked @endif>
+                        </div>
+                        
+                    </div>
                     <div class="col-md-4">
                         <label for="tipo">Classficação do público</label>
                         <select name="tipo" id="tipo" class="form-control" onchange="selecionarDiv(this)">
@@ -51,6 +75,7 @@
                         <input id="exibir_no_form" type="checkbox" name="exibir_no_form" @if(old('exibir_no_form') || (old('exibir_no_form') == null && $publico->exibir_no_form)) checked @endif>
                         <label for="exibir_no_form" >Exibir público no agendamento</label>
                     </div>
+                    
                     <div class="col-md-4">
                         <label for="texto_da_home">Texto exibido na home</label>
                         <input id="texto_da_home" type="text" class="form-control @error('texto_da_home') is-invalid @enderror" name="texto_da_home" value="@if(old('texto_da_home')!=null){{old('texto_da_home')}}@else{{$publico->texto_home}}@endif">
@@ -324,6 +349,16 @@
         </form>
     </div>
     <script>
+        $(document).ready(function(){
+
+            $("#isDias").click(function(){
+                $("#numero_dias").toggle();
+                $("#intervalo_reforco").toggle();
+            });
+
+        }); 
+        
+
         function adicionarOpcao() {
             html = `<div class="col-md-5" style="border: 1px solid rgb(196, 196, 196);
                                     padding: 15px;

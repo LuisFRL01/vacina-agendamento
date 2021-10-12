@@ -79,6 +79,8 @@
                                     <a href="https://api.whatsapp.com/send?phone=55{{$candidato->getWhatsapp()}}&text={{$candidato->getMessagemWhatsapp()}}" class="text-center text-white"  target="_blank"><i class="fab fa-whatsapp fa-2x"></i></a>  
                                 @elseif($candidato->dose == "2ª Dose")
                                     <a href="https://api.whatsapp.com/send?phone=55{{$candidato->getWhatsapp()}}&text={{$candidato->getMessagemSegundaDose()}}" class="text-center text-white"  target="_blank"><i class="fab fa-whatsapp fa-2x"></i></a>
+                                @elseif($candidato->dose == "3ª Dose" && $candidato->aprovacao != null && $candidato->aprovacao != $candidato_enum[3] && $candidato->aprovacao != $candidato_enum[0])
+                                    <a href="https://api.whatsapp.com/send?phone=55{{$candidato->getWhatsapp()}}&text={{$candidato->getMessagemTerceiraDose()}}" class="text-center text-white"  target="_blank"><i class="fab fa-whatsapp fa-2x"></i></a>
                                 @else
                                     <a class="text-center"  target="_blank"><i class="fab fa-whatsapp fa-2x"></i></a>
                                 @endif
@@ -187,6 +189,24 @@
                                     @endif
                                 </div>
                                 <br>
+                                {{-- @dd($candidato) --}}
+                                @if ($candidato->dataDose)
+                                    <div class="row">
+                                        <h4>Informações da Data de Segunda Dose</h4>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label for="">Data 1ª Dose</label>
+                                            <input type="text" class="form-control" value="{{ date('d/m/Y', strtotime($candidato->dataDose->data_um)) }}" disabled>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="">Data 2ª Dose</label>
+                                            <input type="text" class="form-control" value="{{date('d/m/Y', strtotime($candidato->dataDose->data_dois))}}" disabled>
+                                        </div>
+                                    
+                                    </div>
+
+                                @endif
                                 @php
                                     $lote = App\Models\LotePostoVacinacao::find($candidato->lote_id);
                                     if($lote != null){

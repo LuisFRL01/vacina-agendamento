@@ -16,7 +16,7 @@ class Candidato extends Model
 
     public const SEXO_ENUM = ["Masculino", "Feminino", "Não informar"];
     public const APROVACAO_ENUM = ["Não Analisado", "Aprovado", "Reprovado", "Vacinado"];
-    public const DOSE_ENUM = ["1ª Dose", '2ª Dose', "Dose única"];
+    public const DOSE_ENUM = ["1ª Dose", '2ª Dose', "Dose única", "3ª Dose"];
     public const bairros = [
         "Área rural",
         "Aloísio Pinto",
@@ -62,6 +62,7 @@ class Candidato extends Model
         "etapa_id",
         "etapa_resultado",
         "dose",
+        "doses",
         // "profissional_da_saude",
         // "pessoa_idosa",
     ];
@@ -90,16 +91,16 @@ class Candidato extends Model
             $mensagem = $mensagem."Agradecemos a sua atenção e ficamos à disposição para outros esclarecimentos que sejam necessários!";
         } else if ($this->aprovacao == $this::APROVACAO_ENUM[1]) {
             $mensagem = "Sr(a). ".$this->nome_completo.",\n";
-            $mensagem = $mensagem."a sua solicitação de agendamento para vacinação foi aprovada pela Secretaria Municipal de Saúde de Garanhuns - PE.\n";
-            $mensagem = $mensagem."A seguir, encontram-se o dia, horário e local de aplicação da ".$this->dose.":\n";
+            $mensagem = $mensagem."a sua solicitação de agendamento para vacinação foi aprovada pela Secretaria Municipal de Saúde de Garanhuns - PE.\n\n";
+            $mensagem = $mensagem."A seguir, encontram-se o dia, horário e local de aplicação da ".$this->dose.":\n\n";
             $mensagem = $mensagem."Dia: ".date('d/m/Y \à\s  H:i\h', strtotime($this->chegada)).".\n";
             $mensagem = $mensagem."Local: ".$this->posto->nome.".\n";
-            $mensagem = $mensagem."Endereço: ".$this->posto->endereco.".\n";
-            $mensagem = $mensagem."Lembramos que para que seja realizada a aplicação da vacina, a pessoa deve apresentar documento de identificação com foto (RG/CPF), cartão do SUS e comprovante de residência constando o nome da pessoa a ser vacinada.\n";
-            $mensagem = $mensagem."Para os agendamentos de comorbidades é necessário o formulário que atesta a comorbidade, previamente preenchido por um profissional de saúde (exceto pessoas com Síndrome de Down).\n";
-            $mensagem = $mensagem."Os demais grupos prioritários deverão comprovar esta condição através um destes documentos: declaração de vínculo profissional, contracheque, ou outro documento que comprove o exercício da função e/ou vinculação com o serviço.\n";
-            $mensagem = $mensagem."Reforçamos a importância de que a pessoa esteja de posse de todos os documentos! A pessoa cadastrada será imunizada com a dose disponível, de acordo com o grupo escolhido, não sendo permitida a escolha de outro grupo no ato da vacinação. Agradecemos a sua atenção!";
-
+            $mensagem = $mensagem."Endereço: ".$this->posto->endereco.".\n\n";
+            $mensagem = $mensagem."Lembramos que para que seja realizada a aplicação da vacina, a pessoa deve apresentar documento de identificação com foto (RG/CPF), cartão do SUS e comprovante de residência constando o nome da pessoa a ser vacinada.\n\n";
+            $mensagem = $mensagem."Para os agendamentos de comorbidades é necessário o formulário que atesta a comorbidade, preenchido por um profissional de saúde.\n\n";
+            $mensagem = $mensagem."No caso de menores de 18 anos deve ser apresentado documento de identificação com foto ou certidão de nascimento, CPF, cartão do SUS e comprovante de residência constando o nome dos pais ou responsável legal.\n\n";
+            $mensagem = $mensagem."IMPORTANTE: No momento da vacinação o adolescente deve estar acompanhado dos pais. No caso de responsável legal, a condição de tutela deve ser comprovada através de documento emitido em cartório.\n\n";
+            $mensagem = $mensagem."Reforçamos a importância de que a pessoa esteja de posse de todos os documentos! A pessoa cadastrada será imunizada com a dose disponível, de acordo com o grupo escolhido. Agradecemos a sua atenção!";
         } else if ($this->aprovacao == $this::APROVACAO_ENUM[2]) {
             $mensagem = "Seu agendamento foi reprovado.";
         }
@@ -127,6 +128,20 @@ class Candidato extends Model
         return urlencode($mensagem);
     }
 
+    public function getMessagemTerceiraDose() {
+        $mensagem = "";
+        $mensagem = "Sr(a). ".$this->nome_completo.",\n";
+            $mensagem = $mensagem."a sua solicitação de agendamento para vacinação foi aprovada pela Secretaria Municipal de Saúde de Garanhuns - PE.\n\n";
+            $mensagem = $mensagem."A seguir, encontram-se o dia, horário e local de aplicação da DOSE DE REFORÇO:\n\n";
+            $mensagem = $mensagem."Dia: ".date('d/m/Y \à\s  H:i\h', strtotime($this->chegada)).".\n";
+            $mensagem = $mensagem."Local: ".$this->posto->nome.".\n";
+            $mensagem = $mensagem."Endereço: ".$this->posto->endereco.".\n\n";
+            $mensagem = $mensagem."Neste momento serão contemplados apenas: pessoas com 60 anos ou mais que completaram o esquema vacinal há pelo menos seis meses; e imunossuprimidos que completaram o esquema vacinal há pelo menos 28 dias. Além dos trabalhadores da saúde que completaram o esquema vacinal até o dia 31/03.\n\n";
+            $mensagem = $mensagem."A Secretaria de Saúde vai exigir a apresentação de documento oficial com foto, CPF, cartão do SUS (CNS), comprovante de residência no nome da pessoa que será vacinada, e cartão de vacina Covid-19 com a 2ª dose (D2) ou dose única. Para os imunossuprimidos também será obrigatório o laudo médico ou receita de medicamentos imunossupressores. Os trabalhadores de saúde devem apresentar declaração de vínculo da instituição onde atua em Garanhuns.\n\n";
+            $mensagem = $mensagem."Reforçamos a importância de que você esteja de posse de todos os documentos! Agradecemos a sua atenção!";
+        return urlencode($mensagem);
+    }
+
     public function posto() {
         return $this->belongsTo(PostoVacinacao::class, 'posto_vacinacao_id');
     }
@@ -146,5 +161,10 @@ class Candidato extends Model
 
     public function outrasInfo() {
         return $this->belongsToMany(OutrasInfoEtapa::class, 'agendamento_outras_infos', 'candidato_id', 'outras_info_id');
+    }
+
+    public function dataDose()
+    {
+        return $this->hasOne(DataDose::class);
     }
 }
