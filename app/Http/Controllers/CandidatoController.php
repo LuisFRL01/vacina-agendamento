@@ -152,7 +152,7 @@ class CandidatoController extends Controller
         // TODO: pegar só os postos com vacinas disponiveis
 
         $postos_com_vacina = PostoVacinacao::where('padrao_no_formulario', true)->get();
-        $etapasAtuais   =  Etapa::where('atual', true)->where('dose_tres', false)->orderBy('texto')->get();
+        $etapasAtuais   =  Etapa::where('atual', true)->orderBy('texto')->get();
         $config = Configuracao::first();
 
         if ($config->botao_solicitar_agendamento && auth()->user() == null) {
@@ -197,7 +197,14 @@ class CandidatoController extends Controller
                         "dose" => "Existe um agendamento para a 3ª dose para esse cadastro."
                     ]);
                 }
-                $candidatoTerceiraDose = Candidato::where('cpf', $validate->cpf)->where('data_de_nascimento', $validate->data_de_nascimento)->first();
+                $candidatoTerceiraDose = Candidato::where('cpf', $validate->cpf)
+                                            ->where('data_de_nascimento', $validate->data_de_nascimento)
+                                            ->whereIn('dose', ['2ª Dose', "Dose única"])->first();
+                if ($candidatoTerceiraDose == null) {
+                    return redirect()->back()->withErrors([
+                        "dose" => "Não existe cadastro aprovado no sistema para esse cpf."
+                    ]);
+                }
             }
         }
         
@@ -258,7 +265,9 @@ class CandidatoController extends Controller
                     ]);
                 }
             }
+            
             if($request->dose_tres && $request->cadastro == "1" ){
+                $idade              = $this->idade($validate->data_de_nascimento);
                 $candidato = new Candidato;
                 $candidato->nome_completo           = $candidatoTerceiraDose->nome_completo;
                 $candidato->data_de_nascimento      = $validate->data_de_nascimento;
@@ -278,6 +287,43 @@ class CandidatoController extends Controller
                 $candidato->complemento_endereco    = $request->complemento_endereco;
                 $candidato->aprovacao               = Candidato::APROVACAO_ENUM[1];
                 $candidato->dose                    = "3ª Dose";
+                $etapa = Etapa::find($candidatoTerceiraDose->etapa_id);
+    
+                if ($etapa->tipo == Etapa::TIPO_ENUM[0]) {
+                    if (!($etapa->inicio_intervalo <= $idade && $etapa->fim_intervalo >= $idade)) {
+                        return redirect()->back()->withErrors([
+                            "data_de_nascimento" => "Idade fora da faixa etária de vacinação."
+                        ])->withInput();
+                    }
+                } else if ($etapa->tipo == Etapa::TIPO_ENUM[2]) {
+                    if (!($etapa->inicio_intervalo <= $idade && $etapa->fim_intervalo >= $idade)) {
+                        return redirect()->back()->withErrors([
+                            "data_de_nascimento" => "Idade fora da faixa etária de vacinação."
+                        ])->withInput();
+                    }
+    
+                    if ($request->input("publico_opcao_" . $request->input('público')) == null) {
+                        return redirect()->back()->withErrors([
+                            "publico_opcao_" . $request->input('público') => "Esse campo é obrigatório para público marcado."
+                        ])->withInput();
+                    }
+                    $candidato->etapa_resultado = $request->input("publico_opcao_" . $request->input('público'));
+                }
+    
+                if ($etapa->outras_opcoes_obrigatorio != null && $etapa->outras_opcoes_obrigatorio) {
+                    if (!($request->input("opcao_etapa_".$etapa->id) != null && count($request->input("opcao_etapa_".$etapa->id)) > 0)) {
+                        return redirect()->back()->withErrors([
+                            "outras_infor_obg_" . $request->input('público') => "Você deve marcar pelo menos uma informação para esse público."
+                        ])->withInput();
+                    }
+                }
+    
+                //TODO: mover pro service provider
+                if (!$this->validar_cpf($candidato->cpf)) {
+                    return redirect()->back()->withErrors([
+                        "cpf" => "Número de CPF inválido"
+                    ])->withInput();
+                }
                 $candidato->etapa_id                = $candidatoTerceiraDose->etapa_id;
             }elseif($request->dose_tres && $request->cadastro == "0"){
                 $candidato = new Candidato;
@@ -424,7 +470,11 @@ class CandidatoController extends Controller
                 // dd($etapa->numero_dias);
                 if($etapa->isDias){
                     $datetime2 = new DateTime(now());
-                    $datetime1 = new DateTime($validate->data_dois);
+                    if($request->cadastro == "1"){
+                        $datetime1 = new DateTime($candidatoTerceiraDose->saida);
+                    }else{
+                        $datetime1 = new DateTime($validate->data_dois);
+                    }
                     $interval = $datetime1->diff($datetime2);
                     // dd($interval->days < $etapa->numero_dias);
                     // dd($interval->days);
@@ -435,7 +485,11 @@ class CandidatoController extends Controller
                     }
                 }else{
                     $datetime2 = new DateTime($etapa->intervalo_reforco);
-                    $datetime1 = new DateTime($validate->data_dois);
+                    if($request->cadastro == "1"){
+                        $datetime1 = new DateTime($candidatoTerceiraDose->saida);
+                    }else{
+                        $datetime1 = new DateTime($validate->data_dois);
+                    }
                     $interval = $datetime1->diff($datetime2);
                     // dd($interval->invert);
                     if ($interval->invert == 1) {
@@ -813,6 +867,7 @@ class CandidatoController extends Controller
         }
 
         $agendamentos = Candidato::where([['cpf', $request->cpf], ['data_de_nascimento', $request->data_de_nascimento]])
+                      ->where('aprovacao', '!=', "Reprovado")
                       ->orderBy("dose") // Mostra primeiro o agendamento mais recente
                       ->get();
 
@@ -820,6 +875,7 @@ class CandidatoController extends Controller
             $caracteres = array(".", "-");
             $cpf = str_replace($caracteres, "", $request->cpf);
             $agendamentos = Candidato::where([['cpf', $cpf], ['data_de_nascimento', $request->data_de_nascimento]])
+                      ->where('aprovacao', '!=', "Reprovado")
                       ->orderBy("dose") // Mostra primeiro o agendamento mais recente
                       ->get();
         }              
