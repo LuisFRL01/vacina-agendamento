@@ -14,7 +14,7 @@
             <!-- cadastro -->
             <div class="col-md-9 style_card_apresentacao">
                 <div class="container" style="padding-top: 10px;">
-                    <form action="{{ route('reforco.solicitar.form') }}" method="get">
+                    <form action="{{ route('reforco2.solicitar.form') }}" method="get">
                         {{-- @csrf --}}
                         <input type="hidden" name="cpf" value="{{ $validate['cpf'] }}">
                         <input type="hidden" name="data_de_nascimento" value="{{ $validate['data_de_nascimento'] }}">
@@ -26,7 +26,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-12 style_titulo_campo">Solicitar Vacinação da Dose de Reforço</div>
+                            <div class="col-md-12 style_titulo_campo">Solicitar Vacinação da Segunda Dose de Reforço</div>
                             <div class="col-md-12"><hr class="style_linha_campo"></div>
 
                             <div class="container">
@@ -36,26 +36,15 @@
                                     </div>
                                 @endif
                                 <p class="alert alert-warning"  id="alerta_vacinas">
-                                    Preencher com a data da primeira e segunda dose. A veracidade das informações preenchidas na Plataforma Vem Vacina será verificada no ato da vacinação!
+                                    Preencher com a data da terceira dose. A veracidade das informações preenchidas na Plataforma Vem Vacina será verificada no ato da vacinação!
                                     {{-- Preencher com a data da sua dose única ou com a data da primeira e segunda dose. A veracidade das informações preenchidas na Plataforma Vem Vacina será verificada no ato da vacinação!  --}}
                                     <br>
                                     <br>
-                                    ATENÇÃO! A primeira dose de reforço será aplicada para: pessoas com 18 anos ou mais que completaram o esquema vacinal há quatro meses ou mais, ou imunossuprimidos que completaram o esquema vacinal há 28 dias ou mais.                                </p>
+                                    ATENÇÃO! A segunda dose de reforço será aplicada exclusivamente para pessoas com 65 anos ou mais que completaram o esquema vacinal há quatro meses ou mais.                                </p>
                                 <div class="row">
-                                    <div class="col-md-6">
-                                        <label for="inputData_um" class="style_titulo_input">Data 1ª Dose <span class="style_titulo_campo">*</span><span class="style_subtitulo_input"> (obrigatório)</span> </label>
-                                        <input type="date" class="form-control style_input @error('data_um') is-invalid @enderror"  name="data_um" value="{{old('data_um')}}">
-
-                                        @error('data_um')
-                                        <div id="validationServer05Feedback" class="invalid-feedback">
-                                            <strong>{{$message}}</strong>
-                                        </div>
-                                        @enderror
-                                    </div>
-                                    <div class="col-md-6">
-
-                                        <label for="inputData" class="style_titulo_input">Data 2ª Dose <span class="style_titulo_campo">*</span><span class="style_subtitulo_input"> (obrigatório)</span> </label>
-                                        <input type="date" class="form-control style_input @error('data_dois') is-invalid @enderror" placeholder="dd/mm/aaaa" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" name="data_dois" value="{{old('data_dois')}}">
+                                    <div class="col-md-12">
+                                        <label for="inputDataDois" class="style_titulo_input">Data 3ª Dose <span class="style_titulo_campo">*</span><span class="style_subtitulo_input"> (obrigatório)</span> </label>
+                                        <input id="inputDataDois" type="date" class="form-control style_input @error('data_dois') is-invalid @enderror"  name="data_dois" value="{{old('data_dois')}}">
 
                                         @error('data_dois')
                                         <div id="validationServer05Feedback" class="invalid-feedback">
@@ -73,7 +62,7 @@
                                         </p> --}}
                                     </div>
                                     <div class="mb-3 col-md-12">
-                                        <button type="submit" class="btn btn-success" style="width: 100%;" >Cadastro da 3ª Dose</button>
+                                        <button type="submit" class="btn btn-success" style="width: 100%;" >Cadastro da 4ª Dose</button>
                                     </div>
                                 </div>
                             </div>

@@ -1,19 +1,19 @@
 <x-guest-layout>
 
-    {{-- @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif --}}
-
-
+    {{-- @dd($errors->any()) --}}
     @if (session('status'))
         <div class="alert alert-success">
             {{ session('status') }}
+        </div>
+    @endif
+    @if (session('tempo'))
+        <div class="alert alert-danger">
+            {{ session('tempo') }}
+        </div>
+    @endif
+    @if (session('message'))
+        <div class="alert alert-danger">
+            {{ session('message') }}
         </div>
     @endif
 
@@ -47,21 +47,14 @@
                             <br>
                             <a href="{{route('baixar.anexo', ['name'=> 'anexo1.pdf'])}}"  class="btn btn-success "  target="_blank" style="color:white;">Baixar anexo </a>
                         </div>
-                        <!-- Crianças com comorbidade -->
-                        <div class="col-md-12 style_titulo_campo" data-toggle="tooltip" data-placement="top" title="A comprovação das comorbidades deve ser feita no ato da vacinação. Para isso, a Secretaria Estadual de Saúde produziu um modelo de atestado aonde um profissional de saúde poderá indicar a doença preexistente do paciente. É obrigatório o carimbo, matrícula e/ou registro do conselho de classe do profissional." style="margin-bottom: 10px;">
-                            Laudo médico para crianças com comorbidades entre 5 a 11 anos.
-                            <br>
-                            <a href="{{route('baixar.anexo', ['name'=> 'anexo5.pdf'])}}"  class="btn btn-success "  target="_blank" style="color:white;">Baixar anexo </a>
-                        </div>
                         <div class="col-md-12"><hr class="style_linha_campo"></div>
                         <div class="col-md-12 style_titulo_campo" style="margin-bottom: 10px;">Informações pessoais</div>
                         <div class="col-md-12">
                             <form method="POST" id="formSolicitar" class="needs-validation" action="{{ route('solicitacao.candidato.enviar') }}" enctype="multipart/form-data">
                                 @csrf
                                 <input type="hidden" name="voltou" value="1">
-                                <input type="hidden" name="dose_tres" value="0">
+                                <input type="hidden" name="dose_quatro" value="1">
                                 <input type="hidden" name="cadastro" value="0">
-                                {{-- @dd(session('bool') ?? "Erro"); --}}
 
                                 @if ($errors->any())
                                     <div class="alert alert-danger">
@@ -108,7 +101,7 @@
                                                             <div class="col-md-12">
                                                                 <label for="inputProfissao" class="style_titulo_input" style="font-weight: normal;">Qual tipo de {{mb_strtolower($publico->texto)}}</label>
                                                                 <select class="form-control @error('publico_opcao_'.$publico->id) is-invalid @enderror" id="publico_opcao_{{$publico->id}}" name="publico_opcao_{{$publico->id}}">
-                                                                    <option value="" seleceted disabled>-- Selecione o tipo --</option>
+                                                                    <option value="" selected disabled>-- Selecione o tipo --</option>
                                                                     @foreach ($publico->opcoes()->orderBy('opcao')->get() as $opcao)
                                                                         <option value="{{$opcao->id}}" @if(old('publico_opcao_'.$publico->id) == $opcao->id) selected @endif>{{$opcao->opcao}}</option>
                                                                     @endforeach
@@ -199,7 +192,7 @@
                                                         <div class="col-md-12">
                                                             <label for="inputProfissao" class="style_titulo_input" style="font-weight: normal;">Qual tipo de {{mb_strtolower($publico->texto)}}</label>
                                                             <select class="form-control" id="publico_opcao_{{$publico->id}}" name="publico_opcao_{{$publico->id}}">
-                                                                <option value="" seleceted disabled>-- Selecione o tipo --</option>
+                                                                <option value="" selected disabled>-- Selecione o tipo --</option>
                                                                 @foreach ($publico->opcoes()->orderBy('opcao')->get() as $opcao)
                                                                     <option value="{{$opcao->id}}">{{$opcao->opcao}}</option>
                                                                 @endforeach
@@ -232,7 +225,7 @@
                                                             <div class="col-md-12">
                                                                 <label for="inputProfissao" class="style_titulo_input" style="font-weight: normal;">Qual tipo de {{mb_strtolower($publico->texto)}}</label>
                                                                 <select class="form-control" id="publico_opcao_{{$publico->id}}" name="publico_opcao_{{$publico->id}}">
-                                                                    <option value="" seleceted disabled>-- Selecione o tipo --</option>
+                                                                    <option value="" selected disabled>-- Selecione o tipo --</option>
                                                                     @foreach ($publico->opcoes()->orderBy('opcao')->get() as $opcao)
                                                                         @if($publico->inicio_intervalo == 18)
                                                                             @if ($opcao->opcao != "Gestantes e puérperas" )
@@ -257,7 +250,7 @@
                                 <div class="form-row">
                                     <div class="form-group col-md-12">
                                         <label for="inputNome" class="style_titulo_input">NOME COMPLETO<span class="style_titulo_campo">*</span><span class="style_subtitulo_input"> (obrigatório)</span> </label>
-                                        <input type="text" class="form-control style_input apenasLetras @error('nome_completo') is-invalid @enderror" id="inputNome" placeholder="Digite seu nome completo" name="nome_completo" value="{{old('nome_completo')}}" maxlength="65">
+                                        <input type="text" class="form-control style_input apenasLetras @error('nome_completo') is-invalid @enderror" id="inputNome" placeholder="Digite seu nome completo" name="nome_completo" value="{{old('nome_completo')}}" maxlength="65" required>
 
                                         @error('nome_completo')
                                         <div id="validationServer05Feedback" class="invalid-feedback">
@@ -269,7 +262,7 @@
                                 <div class="form-row">
                                     <div class="form-group col-md-6">
                                         <label for="inputData" class="style_titulo_input">DATA DE NASCIMENTO<span class="style_titulo_campo">*</span><span class="style_subtitulo_input"> (obrigatório)</span> </label>
-                                        <input type="date" class="form-control style_input @error('data_de_nascimento') is-invalid @enderror" id="inputData" placeholder="dd/mm/aaaa" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" name="data_de_nascimento" value="{{old('data_de_nascimento')}}">
+                                        <input type="date" class="form-control style_input @error('data_de_nascimento') is-invalid @enderror" id="inputData" placeholder="dd/mm/aaaa" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" name="data_de_nascimento" value="{{$validate['data_de_nascimento']}}" readonly>
 
                                         @error('data_de_nascimento')
                                         <div id="validationServer05Feedback" class="invalid-feedback">
@@ -278,8 +271,8 @@
                                         @enderror
                                     </div>
                                     <div class="form-group col-md-6">
-                                        <label for="inputCPF" class="style_titulo_input">CPF<span class="style_titulo_campo"></span></label>
-                                        <input type="text" class="form-control style_input cpf @error('cpf') is-invalid @enderror" id="inputCPF" placeholder="Ex.: 000.000.000-00" name="cpf" value="{{old('cpf')}}">
+                                        <label for="inputCPF" class="style_titulo_input">CPF<span class="style_titulo_campo">*</span><span class="style_subtitulo_input"> (obrigatório)</span> </label>
+                                        <input type="text" class="form-control style_input cpf @error('cpf') is-invalid @enderror" id="inputCPF" placeholder="Ex.: 000.000.000-00" name="cpf" value="{{$validate['cpf']}}" readonly>
 
                                         @error('cpf')
                                         <div id="validationServer05Feedback" class="invalid-feedback">
@@ -373,7 +366,6 @@
                                                 <div class="style_titulo_campo" style="margin-bottom: -2px;">Outras informações</div>
                                                 <div style="font-size: 15px; margin-bottom: 15px;">@if($publico->texto_outras_informacoes!=null)({{$publico->texto_outras_informacoes}})@endif</div>
                                             </div>
-
                                             @foreach ($publico->outrasInfo()->orderBy('campo')->get() as $outra)
                                                 @if (mb_strtoupper($outra->campo) != 'É ACAMADO?')
                                                     <div class="form-check">
@@ -416,7 +408,7 @@
                                 <div class="form-row">
                                     <div class="form-group col-md-6">
                                         <label for="inputCidade" class="style_titulo_input">CIDADE<span class="style_titulo_campo">*</span><span class="style_subtitulo_input"> (obrigatório)</span> </label>
-                                        <input id="inputCidade" class="form-control style_input @error('cidade') is-invalid @enderror" name="cidade" value="@if(old('cidade') != null){{old('cidade')}}@else{{"Garanhuns"}}@endif" disabled>
+                                        <input id="inputCidade" class="form-control style_input @error('cidade') is-invalid @enderror" name="cidade" value="@if(old('cidade') != null){{old('cidade')}}@else{{"Garanhuns"}}@endif" readonly>
 
                                         @error('cidade')
                                         <div id="validationServer05Feedback" class="invalid-feedback">
@@ -521,18 +513,25 @@
                                 <div class="col-md-12" style="margin-bottom: 30px;">
                                     <div class="row">
                                         <div class="col-md-6"></div>
-                                        <div class="col-md-6">
+                                        <div class="col-md-12">
                                             <div class="row">
                                                 <!--<div class="col-md-6" style="padding:3px">
                                                      <button class="btn btn-light" style="width: 100%;margin: 0px;">Cancelar</button>
                                                      </div>-->
+                                                <div class="col-md-12" style="padding:3px">
+                                                    <p class="alert alert-warning"  id="alerta_vacinas">
+
+                                                        ATENÇÃO! A segunda dose de reforço será aplicada exclusivamente para pessoas com 65 anos ou mais que completaram o esquema vacinal há quatro meses ou mais.                                                    </p>
+                                                </div>
                                                 @if (env('ATIVAR_FILA', false) == true)
+
                                                     <div class="col-md-12" style="padding:3px">
-                                                        <button class="btn btn-success"  style="width: 100%;">Enviar</button>
+                                                        <button class="btn btn-success" type="submit"  style="width: 100%;">Enviar</button>
                                                     </div>
                                                 @else
+
                                                     <div class="col-md-12" style="padding:3px">
-                                                        <button class="btn btn-success" id="buttonSend" style="width: 100%;">Enviar</button>
+                                                        <button class="btn btn-success" type="submit" id="buttonSend" style="width: 100%;">Enviar</button>
                                                     </div>
 
                                                 @endif
@@ -701,16 +700,16 @@
 
 
     <script>
-        const buttonSend = document.getElementById('buttonSend');
-        const formSolicitar = document.getElementById('formSolicitar');
-        if(buttonSend){
-            buttonSend.addEventListener('click', (e)=>{
-                e.target.innerText = "Aguarde...";
-                e.target.setAttribute("disabled", "disabled");
+        // const buttonSend = document.getElementById('buttonSend');
+        // const formSolicitar = document.getElementById('formSolicitar');
+        // if(buttonSend){
+        //     buttonSend.addEventListener('click', (e)=>{
+        //         e.target.innerText = "Aguarde...";
+        //         e.target.setAttribute("disabled", "disabled");
 
-                formSolicitar.submit()
-            })
-        }
+        //         formSolicitar.submit()
+        //     })
+        // }
 
 
 
@@ -835,7 +834,7 @@
          let id_posto = posto_selecionado.value;
          let div_seletor_horararios = document.getElementById("seletor_horario");
          div_seletor_horararios.innerHTML = "Buscando horários disponíveis...";
-         let url = window.location.toString().replace("solicitar", "horarios/" + id_posto);
+         let url = window.location.toString().replace("reforco/form", "horarios/" + id_posto);
         //  console.log(url);
 
          /* Mágia de programação funcional */

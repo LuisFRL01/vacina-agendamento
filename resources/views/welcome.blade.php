@@ -25,9 +25,12 @@
                                     <div class="col-md-12 style_card_apresentacao_solicitar_vacina text-center">SOLICITAR MINHA DOSE DE REFORÇO</div>
                                     <div class="col-md-12 style_card_apresentacao_solicitar_vacina_subtitulo" style="text-align: justify;">Clique para solicitar e agendar sua vacinação, ou realizar cadastro na fila de espera (é necessário aguardar aprovação da solicitação pela Secretaria de Saúde).</div>
                                     @auth
-                                        <a href="{{route('reforco.index')}}" class="btn btn-info style_card_apresentacao_botao" style="color:white;">SOLICITAR MINHA DOSE DE REFORÇO </a>
+                                        <a href="{{route('reforco.index')}}" class="btn btn-info style_card_apresentacao_botao" style="color:white;">SOLICITAR MINHA PRIMEIRA DOSE DE REFORÇO </a>
+                                        <a href="{{route('reforco2.index')}}" class="btn btn-secondary style_card_apresentacao_botao" style="color:white;">SOLICITAR MINHA SEGUNDA DOSE DE REFORÇO </a>
+
                                     @else
-                                        <a href="{{route('reforco.index')}}" class="btn btn-info style_card_apresentacao_botao" style="color:white; @if($config->botao_solicitar_agendamento) pointer-events: none; background-color: rgb(107, 224, 107); border-color: rgb(107, 224, 107); @endif" >@if($config->botao_solicitar_agendamento)VAGAS ESGOTADAS! AGUARDE NOVA REMESSA @else SOLICITAR MINHA DOSE DE REFORÇO @endif</a>
+                                        <a href="{{route('reforco.index')}}" class="btn btn-info style_card_apresentacao_botao" style="color:white; @if($config->botao_solicitar_agendamento) pointer-events: none; background-color: rgb(107, 224, 107); border-color: rgb(107, 224, 107); @endif" >@if($config->botao_solicitar_agendamento)VAGAS ESGOTADAS! AGUARDE NOVA REMESSA @else SOLICITAR MINHA <b style="color: black">PRIMEIRA</b> DOSE DE REFORÇO @endif</a>
+                                        <a href="{{route('reforco2.index')}}" class="btn btn-secondary style_card_apresentacao_botao" style="color:white; @if($config->botao_solicitar_agendamento) pointer-events: none; background-color: rgb(107, 224, 107); border-color: rgb(107, 224, 107); @endif" >@if($config->botao_solicitar_agendamento)VAGAS ESGOTADAS! AGUARDE NOVA REMESSA @else SOLICITAR MINHA <b style="color: black">SEGUNDA</b> DOSE DE REFORÇO @endif</a>
                                     @endauth
                                 </div>
                             </div>
@@ -68,12 +71,28 @@
                                         <div class="panel panel-default">
                                             <div class="panel-heading p-3 mb-3" role="tab" id="heading0"  style="border-radius: 8px;">
                                                 <h3 class="panel-title">
+                                                    <a class="collapsed" role="button" title="" data-toggle="collapse" data-parent="#accordion" href="#anexos6" aria-expanded="true" aria-controls="anexos6">
+                                                        NOTA TÉCNICA SIDI 3 - 2022 PARA VACINAÇÃO DE CRIANÇAS DE 5 A 11 ANOS
+                                                    </a>
+                                                </h3>
+                                            </div>
+                                            <div id="anexos6" class="panel-collapse collapse show" role="tabpanel" aria-labelledby="heading0">
+                                                <div class="panel-body px-3 mb-4">
+                                                    <p style="text-align: justify">
+                                                    </p>
+                                                    <a href="{{route('baixar.anexo', ['name'=> 'NOTA_TECNICA_SIDI_3-2022.pdf'])}}"  class="btn btn-success "  target="_blank" style="color:white;">Baixar Nota Técnica</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="panel panel-default">
+                                            <div class="panel-heading p-3 mb-3" role="tab" id="heading0"  style="border-radius: 8px;">
+                                                <h3 class="panel-title">
                                                 <a class="collapsed" role="button" title="" data-toggle="collapse" data-parent="#accordion" href="#anexos5" aria-expanded="true" aria-controls="anexos5">
                                                     DOSE DE REFORÇO - Nota Técnica SIDI 23
                                                 </a>
                                                 </h3>
                                             </div>
-                                            <div id="anexos5" class="panel-collapse collapse show" role="tabpanel" aria-labelledby="heading0">
+                                            <div id="anexos5" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading0">
                                                 <div class="panel-body px-3 mb-4">
                                                 <p style="text-align: justify">
                                                     Nota Técnica do Governo do Estado de Pernambuco com orientações referentes a aplicação das doses de reforço para a população de idosos acima de 60 anos (que tenham completado o esquema vacinal há seis meses), e imunossuprimidos (com o esquema vacinal completo há 28 dias ou mais).
@@ -101,7 +120,7 @@
                                             <div class="panel-heading p-3 mb-3" role="tab" id="heading0"  style="border-radius: 8px;">
                                                 <h3 class="panel-title">
                                                 <a class="collapsed" role="button" title="" data-toggle="collapse" data-parent="#accordion" href="#anexos3" aria-expanded="true" aria-controls="anexos3">
-                                                    Quem são os imunossuprimidos que podem tomar a dose de reforço? 
+                                                    Quem são os imunossuprimidos que podem tomar a dose de reforço?
                                                 </a>
                                                 </h3>
                                             </div>
@@ -137,7 +156,7 @@
                                                         <li>Laudo médico ou receita de medicamentos imunossupressores</li>
                                                     </ul>
                                                 </p>
-                                               
+
                                             </div>
                                         </div>
                                         <div class="panel panel-default">
@@ -279,7 +298,7 @@
                                         </div>
                                         </div>
                                     </div>
-                                    
+
                                     </div>
 
                                 </div>
@@ -290,8 +309,8 @@
             </div>
         </div>
 
-        
-        
+
+
         @auth
             <div class="container" style="text-align: center; margin-top:2rem; margin-bottom: 4rem;">
                 <p style="color: #204788; font-weight: bold;">
@@ -306,7 +325,7 @@
                 </p>
             </div>
         @endguest
-        
+
         <!-- rodapé -->
         <div style="background-color:#313561; display: flex; flex-wrap: wrap;">
             <div class="container">
@@ -350,7 +369,7 @@
         <!--x rodapé x-->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.js"></script>
     </body>
-    
+
     <!-- Modal checar agendamento -->
     <div class="modal fade" id="modalChecarAgendamento" tabindex="-1" aria-labelledby="modalChecarAgendamentoLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -403,7 +422,7 @@
                         <br>
                         <div class="row">
                             <div class="col-md-6">
-
+                                <button type="button" class="btn btn-primary" style="width: 100%;" id="consultaNumSus">Consultar por Cartão SUS</button>
                             </div>
                             <div class="col-md-6">
                                 <button type="submit" class="btn btn-success" style="width: 100%;" form="consultar_agendamento">Consultar</button>
@@ -416,6 +435,71 @@
         </div>
     </div>
     <!-- Fim modal checar agendamento -->
+    <!-- Modal checar agendamento Número Cartão SUS -->
+    <div class="modal fade" id="modalChecarAgendamentoNumSus" tabindex="-1" aria-labelledby="modalChecarAgendamentoNumSusLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 12px;">
+                <div class="modal-header" style="background-color: #FF545A; color: #fff; border-top-left-radius: 12px; border-top-right-radius: 12px; ">
+                    <h5 class="modal-title" id="modalChecarAgendamentoNumSusLabel">CONSULTAR AGENDAMENTO</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="consultar_agendamento_numSus" action="{{route('agendamento.consultarNumSus')}}" method="POST">
+                        @csrf
+                        <div class="container">
+                            <input type="hidden" name="consulta" value="1">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="inputNumSus" class="style_titulo_input">Número Cartão SUS <span class="style_titulo_campo">*</span><span class="style_subtitulo_input"> (obrigatório)</span> </label>
+                                    <input type="text" class="form-control style_input sus @error('numSus') is-invalid @enderror" id="inputNumSus" placeholder="Ex.: 000 0000 0000 0000" name="numSus" value="{{old('numSus')}}">
+
+                                    @error('numSus')
+                                    <div id="validationServer05Feedback" class="invalid-feedback">
+                                        <strong>{{$message}}</strong>
+                                    </div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6">
+                                    {{-- <label for="dose" class="style_titulo_input">QUAL A DOSE? <span class="style_subtitulo_input">*(obrigatório)</span></label>
+                                    <select id="dose" class="form-control style_input @error('dose') is-invalid @enderror" name="dose" required>
+                                        <option selected disabled>-- Selecione a dose --</option>
+                                        <option @if(old('dose') == $doses[0]) selected @endif value="{{$doses[0]}}">{{$doses[0]}}</option>
+                                        <option @if(old('dose') == $doses[1]) selected @endif value="{{$doses[1]}}">{{$doses[1]}}</option>
+                                    </select>
+
+                                    @error('dose')
+                                    <div id="validationServer05Feedback" class="invalid-feedback">
+                                        <strong>{{$message}}</strong>
+                                    </div>
+                                    @enderror --}}
+                                    <label for="inputData" class="style_titulo_input">DATA DE NASCIMENTO <span class="style_titulo_campo">*</span><span class="style_subtitulo_input"> (obrigatório)</span> </label>
+                                    <input type="date" class="form-control style_input @error('data_de_nascimento') is-invalid @enderror" id="inputData" placeholder="dd/mm/aaaa" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" name="data_de_nascimento" value="{{old('data_de_nascimento')}}">
+
+                                    @error('data_de_nascimento')
+                                    <div id="validationServer05Feedback" class="invalid-feedback">
+                                        <strong>{{$message}}</strong>
+                                    </div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <br>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <button type="button" class="btn btn-primary" style="width: 100%;" id="consultaCpf">Consultar por CPF</button>
+                                </div>
+                                <div class="col-md-6">
+                                    <button type="submit" class="btn btn-success" style="width: 100%;" form="consultar_agendamento_numSus">Consultar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Fim modal checar agendamento SUS -->
     <!-- Modal feed agendamento -->
     <div class="modal fade" id="feed" tabindex="-1" aria-labelledby="feedAdiatamento" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -439,7 +523,7 @@
                                       <p class="card-text"><small class="text-muted">{{ 'Postado ' .$feed->created_at->diffForHumans() }}</small></p>
                                     </div>
                                 </div>
-                                
+
                             </div>
                         </div>
                     @endforeach
@@ -450,26 +534,49 @@
     </div>
     <!-- Fim feed checar agendamento -->
     @if (old('consulta') != null)
+        @error('cpf')
+            <script>
+                $(document).ready(function() {
+                    $("#modalChecarAgendamento").modal('show');
+                });
+            </script>
+        @enderror
+
+        @error('numSus')
+            <script>
+                $(document).ready(function() {
+                    $("#modalChecarAgendamentoNumSus").modal('show');
+                });
+            </script>
+        @enderror
+   <!-- Modal de info inicial ao entrar no site
         <script>
-            $(document).ready(function() {
-                $("#modalChecarAgendamento").modal('show');
-            });
-            
-            
-        </script>
-    @else
-    <script>
         $(document).ready(function() {
             $("#feed").modal('show');
         });
-        
-        
-    </script>
-        
+
+
+    </script> -->
     @endif
 
-    <script>
-            
+    <!-- Alternancia do tipo da consulta do agendamento -->
+    <script type="text/javascript">
+
+        document.getElementById("consultaCpf").onclick = function(){
+            $("#modalChecarAgendamentoNumSus").modal('hide');
+            setTimeout(() => {   $("#modalChecarAgendamento").modal(); }, 500);
+        };
+
+        document.getElementById("consultaNumSus").onclick = function(){
+            $("#modalChecarAgendamento").modal('hide');
+            setTimeout(() => {   $("#modalChecarAgendamentoNumSus").modal(); }, 500);
+        };
+
     </script>
-   
+    <!-- Fim do Script de Altenancia -->
+
+    <script>
+
+    </script>
+
 </x-guest-layout>

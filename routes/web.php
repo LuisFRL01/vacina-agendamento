@@ -38,10 +38,15 @@ Route::get('/manutencao', [WelcomeController::class, 'manutencao'])->name('manut
 
 Route::prefix('reforco')->group(function () {
     Route::get('/', [ReforcoController::class, 'index'])->name('reforco.index');
+    Route::get('/quarta', [ReforcoController::class, 'index2'])->name('reforco2.index');
     Route::get('/verificar/cadastro', [ReforcoController::class, 'verificarCadastro'])->name('reforco.verificar');
+    Route::get('/verificar/cadastro2', [ReforcoController::class, 'verificarCadastro2'])->name('reforco2.verificar');
     Route::post('/solicitar-dose-tres', [ReforcoController::class, 'solicitarDoseTres'])->name('reforco.dose.tres');
+    Route::post('/solicitar-dose-quatro', [ReforcoController::class, 'solicitarDoseQuatro'])->name('reforco.dose.quatro');
     Route::get("/solicitar/reforco/{candidato}", [ReforcoController::class, 'solicitarReforco'])->name("solicitacao.reforco");
+    Route::get("/solicitar/reforco2/{candidato}", [ReforcoController::class, 'solicitarReforco2'])->name("solicitacao.reforco2");
     Route::get("/form", [ReforcoController::class, 'reforcoSolicitaForm'])->name("reforco.solicitar.form");
+    Route::get("/form2", [ReforcoController::class, 'reforcoSolicitaForm2'])->name("reforco2.solicitar.form");
 });
 
 Route::get("/solicitar/{bool?}", [CandidatoController::class, 'solicitar'])->name("solicitacao.candidato");
@@ -50,7 +55,7 @@ Route::post("/solicitar/enviar", [CandidatoController::class, 'enviar_solicitaca
 // Route::get("/agendamento/{id}", [CandidatoController::class, 'ver'])->name("agendamento.ver");
 Route::post("/consultar-agendamento", [CandidatoController::class, 'consultar'])->name("agendamento.consultar");
 Route::get("/todos-os-postos", [PostoVacinacaoController::class, 'todosOsPostos'])->name("postos");
-
+Route::post("/consultar-agendamentoNumSus", [CandidatoController::class, 'consultarNumSus'])->name("agendamento.consultarNumSus");
 
 // Não mudar horarios e cep sem testar tudo no form de solicitar
 Route::get("/horarios/{id_posto}", [PostoVacinacaoController::class, 'horarios'] )->name("posto.horarios");
@@ -79,7 +84,7 @@ Route::middleware(['auth'])->group(function () {
             (select c.cpf
             from candidatos c
             group by c.cpf
-            having count(cpf) > 2) 
+            having count(cpf) > 2)
         group by nome_completo, deleted_at,cpf'));
         // $result = DB::table('candidatos')->select(DB::raw('count("cpf"), nome_completo, chegada'))
         //                                  ->groupBy('cpf', 'nome_completo', 'chegada')
@@ -87,12 +92,12 @@ Route::middleware(['auth'])->group(function () {
         //                                  ->whereMonth('chegada','8')
         //                                  ->get();
 
-        
-    
+
+
         return response($result );
-    
+
         // return view('sobre');
-    
+
     });
     Route::get("/real", function() {
 
@@ -174,7 +179,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/configuracoes/salvar', [ConfiguracaoController::class, 'update'])->name('config.update');
     Route::post('/configuracoes/aprovar', [ConfiguracaoController::class, 'aprovarAgendamentos'])->name('config.agendados.aprovados');
     Route::post('/importar/vacinados', [ImportController::class, 'storeVacinados'])->name('candidato.import.store.vacinados');
-    
+
     Route::get('/relatorios/index', [RelatorioController::class, 'index'])->name('relatorios.index');
     Route::get('/relatorios/pdf', [PDFController::class, 'gerarPdf'])->name('config.gerar.pdf');
 
@@ -195,10 +200,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/estatisticas', [EstatisticaController::class, 'index'])->name('estatistica.index');
     Route::get('/estatisticas/show', [EstatisticaController::class, 'showStats'])->name('estatistica.showStats');
-    
+
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 
-    
+
 });
 
 

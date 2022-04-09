@@ -23,6 +23,8 @@ use App\Models\LotePostoVacinacao;
         <th>Digitado por</th>
         <th>Idade</th>
         <th>Enderenço</th>
+        <th>Telefone</th>
+        <th>Whatsapp</th>
         {{-- <th>Digitado por</th>
         <th>dose</th>
         <th>chegada</th>
@@ -49,8 +51,8 @@ use App\Models\LotePostoVacinacao;
                 }
             @endphp
             @if ($candidato->lote_id)
-                
-                
+
+
                 @if ($candidato->etapa->tipo == $tipos[0] || $candidato->etapa->tipo == $tipos[1] )
                     <td>{{$candidato->etapa->texto}}</td>
                     <td>{{ $candidato->posto->nome ?? "posto" }}</td>
@@ -68,7 +70,11 @@ use App\Models\LotePostoVacinacao;
                     @endif
                     </td> --}}
                 @endif
-                <td>{{ $candidato->cpf }}</td>
+                @if($candidato->cpf != $candidato->numero_cartao_sus)
+                    <td>{{ $candidato->cpf }}</td>
+                @else
+                    <td>Não Informado</td>
+                @endif
                 @php
                     $sus = explode(" ", $candidato->numero_cartao_sus);
                 @endphp
@@ -86,6 +92,8 @@ use App\Models\LotePostoVacinacao;
                 <td>{{  "Digitado por"  }}</td>
                 <td>{{ $candidato->idade }}</td>
                 <td>{{ $candidato->logradouro . ' - ' . $candidato->numero_residencia . ' - ' . $candidato->bairro . ' - ' . $candidato->cidade }}</td>
+                <td>{{ $candidato->telefone }}</td>
+                <td>{{ $candidato->whatsapp }}</td>
                 {{-- <td>{{ $candidato->bairro }}</td>
                 <td>{{ $candidato->logradouro }}</td>
                 <td>{{ $candidato->numero_residencia }}</td> --}}
@@ -107,9 +115,7 @@ use App\Models\LotePostoVacinacao;
                 <td>{{  "Erro"  }} </td>
             @endif
 
-            {{-- <td>{{ $candidato->telefone }}</td>
-            <td>{{ $candidato->whatsapp }}</td>
-            <td>{{ $candidato->email }}</td>
+            {{-- <td>{{ $candidato->email }}</td>
             <td>{{ $candidato->cidade }}</td>
             <td>{{ $candidato->bairro }}</td>
             <td>{{ $candidato->logradouro }}</td>
@@ -117,7 +123,7 @@ use App\Models\LotePostoVacinacao;
             <td>{{ $candidato->aprovacao }}</td>
             <td>{{ date('d/m/Y', strtotime($candidato->chegada)) }}</td>
             <td>{{ date('d/m/Y', strtotime($candidato->saida)) }}</td>
-            
+
             <td>{{ $candidato->created_at }}</td>
             <td>{{ $candidato->updated_at }}</td>
             <td>{{ $candidato->deleted_at }}</td> --}}

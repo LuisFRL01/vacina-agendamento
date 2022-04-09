@@ -11,7 +11,7 @@
             {{ session('tempo') }}
         </div>
     @endif
-    
+
     <div style="padding-bottom: 0rem;padding-top: 1rem; margin-top: -15%; background-color: #fff;">
         <img src="{{asset('img/cabecalho_1.png')}}" alt="Orientação" width="100%">
         <div class="container">
@@ -257,7 +257,7 @@
                                 <div class="form-row">
                                     <div class="form-group col-md-6">
                                         <label for="inputData" class="style_titulo_input">DATA DE NASCIMENTO<span class="style_titulo_campo">*</span><span class="style_subtitulo_input"> (obrigatório)</span> </label>
-                                        <input type="date" class="form-control style_input @error('data_de_nascimento') is-invalid @enderror" id="inputData" placeholder="dd/mm/aaaa" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" name="data_de_nascimento" value="{{$validate['data_de_nascimento']}}" disabled>
+                                        <input type="date" class="form-control style_input @error('data_de_nascimento') is-invalid @enderror" id="inputData" placeholder="dd/mm/aaaa" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" name="data_de_nascimento" value="{{$validate['data_de_nascimento']}}" readonly>
 
                                         @error('data_de_nascimento')
                                         <div id="validationServer05Feedback" class="invalid-feedback">
@@ -267,7 +267,7 @@
                                     </div>
                                     <div class="form-group col-md-6">
                                         <label for="inputCPF" class="style_titulo_input">CPF<span class="style_titulo_campo">*</span><span class="style_subtitulo_input"> (obrigatório)</span> </label>
-                                        <input type="text" class="form-control style_input cpf @error('cpf') is-invalid @enderror" id="inputCPF" placeholder="Ex.: 000.000.000-00" name="cpf" value="{{$validate['cpf']}}" disabled>
+                                        <input type="text" class="form-control style_input cpf @error('cpf') is-invalid @enderror" id="inputCPF" name="cpf" placeholder="Ex.: 000.000.000-00" value="{{$validate['cpf']}}" readonly>
 
                                         @error('cpf')
                                         <div id="validationServer05Feedback" class="invalid-feedback">
@@ -404,7 +404,7 @@
                                 <div class="form-row">
                                     <div class="form-group col-md-6">
                                         <label for="inputCidade" class="style_titulo_input">CIDADE<span class="style_titulo_campo">*</span><span class="style_subtitulo_input"> (obrigatório)</span> </label>
-                                        <input id="inputCidade" class="form-control style_input @error('cidade') is-invalid @enderror" name="cidade" value="@if(old('cidade') != null){{old('cidade')}}@else{{"Garanhuns"}}@endif" disabled>
+                                        <input id="inputCidade" class="form-control style_input @error('cidade') is-invalid @enderror" name="cidade" value="@if(old('cidade') != null){{old('cidade')}}@else{{"Garanhuns"}}@endif" readonly>
 
                                         @error('cidade')
                                         <div id="validationServer05Feedback" class="invalid-feedback">
@@ -516,17 +516,16 @@
                                                      </div>-->
                                                 <div class="col-md-12" style="padding:3px">
                                                     <p class="alert alert-warning"  id="alerta_vacinas">
-                                                        
-                                                        ATENÇÃO! A dose de reforço será aplicada exclusivamente para: idosos acima de 70 anos que completaram o esquema vacinal há seis meses ou mais, ou imunossuprimidos que completaram o esquema vacinal há 28 dias ou mais.
-                                                    </p>
+
+                                                        ATENÇÃO! A primeira dose de reforço será aplicada para: pessoas com 18 anos ou mais que completaram o esquema vacinal há quatro meses ou mais, ou imunossuprimidos que completaram o esquema vacinal há 28 dias ou mais.                                                    </p>
                                                 </div>
                                                 @if (env('ATIVAR_FILA', false) == true)
-                                                    
+
                                                     <div class="col-md-12" style="padding:3px">
                                                         <button class="btn btn-success" type="submit"  style="width: 100%;">Enviar</button>
                                                     </div>
                                                 @else
-                                                    
+
                                                     <div class="col-md-12" style="padding:3px">
                                                         <button class="btn btn-success" type="submit" id="buttonSend" style="width: 100%;">Enviar</button>
                                                     </div>
