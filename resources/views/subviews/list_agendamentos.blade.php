@@ -85,9 +85,9 @@
                                     <a href="https://api.whatsapp.com/send?phone=55{{$candidato->getWhatsapp()}}&text={{$candidato->getMessagemWhatsapp()}}" class="text-center text-white"  target="_blank"><i class="fab fa-whatsapp fa-2x"></i></a>
                                 @elseif($candidato->dose == "2ª Dose")
                                     <a href="https://api.whatsapp.com/send?phone=55{{$candidato->getWhatsapp()}}&text={{$candidato->getMessagemSegundaDose()}}" class="text-center text-white"  target="_blank"><i class="fab fa-whatsapp fa-2x"></i></a>
-                                @elseif($candidato->dose == "3ª Dose" && $candidato->aprovacao != null && $candidato->aprovacao != $candidato_enum[3] && $candidato->aprovacao != $candidato_enum[0])
+                                @elseif($candidato->dose == "3ª Dose" && $candidato->aprovacao != null && $candidato->aprovacao != $candidato_enum[3] && $candidato->aprovacao != $candidato_enum[0] && $candidato->posto!=null)
                                     <a href="https://api.whatsapp.com/send?phone=55{{$candidato->getWhatsapp()}}&text={{$candidato->getMessagemTerceiraDose()}}" class="text-center text-white"  target="_blank"><i class="fab fa-whatsapp fa-2x"></i></a>
-                                @elseif($candidato->dose == "4ª Dose" && $candidato->aprovacao != null && $candidato->aprovacao != $candidato_enum[3] && $candidato->aprovacao != $candidato_enum[0])
+                                @elseif($candidato->dose == "4ª Dose" && $candidato->aprovacao != null && $candidato->aprovacao != $candidato_enum[3] && $candidato->aprovacao != $candidato_enum[0] && $candidato->posto!=null)
                                     <a href="https://api.whatsapp.com/send?phone=55{{$candidato->getWhatsapp()}}&text={{$candidato->getMessagemQuartaDose()}}" class="text-center text-white"  target="_blank"><i class="fab fa-whatsapp fa-2x"></i></a>
                                 @else
                                     <a class="text-center"  target="_blank"><i class="fab fa-whatsapp fa-2x"></i></a>
@@ -383,7 +383,7 @@
           </div>
         </tbody>
     </table>
-    @if ($request != null && $request->outro == false)
+    @if ($request != null && !isset($paginacao))
         <div class="row">
             <div class="col-sm-12">
                 {{ $candidatos->links() }}
@@ -391,3 +391,28 @@
         </div>
     @endif
 </div>
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.css">
+<script>
+    $('#myTable').DataTable({
+        searching: true,
+
+        "language": {
+            "lengthMenu": "Mostrar _MENU_ registros por página",
+            "info": "Exibindo página _PAGE_ de _PAGES_",
+            "infoEmpty": "Nenhum registro disponível",
+            "zeroRecords": "Nenhum registro disponível",
+            "search": "",
+            "paginate": {
+                "previous": "Anterior",
+                "next": "Próximo",
+            }
+        },
+        "dom": '<"top"f>rt<"bottom"p><"clear">',
+        "order": [],
+        "columnDefs": [{
+            "targets": [2],
+            "orderable": false
+        }]
+    });
+</script>

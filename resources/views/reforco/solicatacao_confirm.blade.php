@@ -76,17 +76,17 @@
                                     @auth
                                         @if ($publico->tipo == $tipos[0])
                                             <div class="form-check">
-                                                <input class="form-check-input" type="radio" @if ($candidato->etapa->id == $publico->id) checked  @endif id="publico_{{$publico->id}}" name="público" value="{{$publico->id}}" disabled >
+                                                <input class="form-check-input" type="radio" @if ($candidato->etapa->id == $publico->id) checked  @endif id="publico_{{$publico->id}}" name="público" value="{{$publico->id}}" readonly >
                                                 <label class="form-check-label style_titulo_input" for="publico_{{$publico->id}}">{{mb_strtoupper($publico->texto)}}</label>
                                             </div>
                                         @elseif ($publico->tipo == $tipos[1])
                                             <div class="form-check">
-                                                <input class="form-check-input" type="radio" @if ($candidato->etapa->id == $publico->id) checked  @endif id="publico_{{$publico->id}}" name="público" value="{{$publico->id}}" disabled >
+                                                <input class="form-check-input" type="radio" @if ($candidato->etapa->id == $publico->id) checked  @endif id="publico_{{$publico->id}}" name="público" value="{{$publico->id}}" readonly >
                                                 <label class="form-check-label style_titulo_input" for="publico_{{$publico->id}}">{{mb_strtoupper($publico->texto)}}</label>
                                             </div>
                                         @elseif ($publico->tipo == $tipos[2])
                                             <div class="form-check">
-                                                <input class="form-check-input" type="radio" @if ($candidato->etapa->id == $publico->id) checked  @endif id="publico_{{$publico->id}}" name="público" value="{{$publico->id}}" disabled >
+                                                <input class="form-check-input" type="radio" @if ($candidato->etapa->id == $publico->id) checked  @endif id="publico_{{$publico->id}}" name="público" value="{{$publico->id}}" readonly >
                                                 <label class="form-check-label style_titulo_input" for="publico_{{$publico->id}}">{{mb_strtoupper($publico->texto)}}</label>
 
                                                 <div id="divPublico_{{$publico->id}}" @if (old('publico_'.$publico->id)) style="display: block;" @else style="display: none;" @endif>
@@ -109,17 +109,17 @@
                                         @if ($publico->exibir_no_form)
                                             @if ($publico->tipo == $tipos[0])
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="radio" @if ($candidato->etapa->id == $publico->id) checked  @endif id="publico_{{$publico->id}}" name="público" value="{{$publico->id}}" disabled >
+                                                        <input class="form-check-input" type="radio" @if ($candidato->etapa->id == $publico->id) checked  @endif id="publico_{{$publico->id}}" name="público" value="{{$publico->id}}" readonly >
                                                         <label class="form-check-label style_titulo_input" for="publico_{{$publico->id}}">{{mb_strtoupper($publico->texto)}}</label>
                                                     </div>
                                                 @elseif ($publico->tipo == $tipos[1])
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="radio" @if ($candidato->etapa->id == $publico->id) checked  @endif id="publico_{{$publico->id}}" name="público" value="{{$publico->id}}" disabled >
+                                                        <input class="form-check-input" type="radio" @if ($candidato->etapa->id == $publico->id) checked  @endif id="publico_{{$publico->id}}" name="público" value="{{$publico->id}}" readonly >
                                                         <label class="form-check-label style_titulo_input" for="publico_{{$publico->id}}">{{mb_strtoupper($publico->texto)}}</label>
                                                     </div>
                                                 @elseif ($publico->tipo == $tipos[2])
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="radio" @if ($candidato->etapa->id == $publico->id) checked  @endif id="publico_{{$publico->id}}" name="público" value="{{$publico->id}}" disabled >
+                                                    <input class="form-check-input" type="radio" @if ($candidato->etapa->id == $publico->id) checked  @endif id="publico_{{$publico->id}}" name="público" value="{{$publico->id}}" readonly >
                                                     <label class="form-check-label style_titulo_input" for="publico_{{$publico->id}}">{{mb_strtoupper($publico->texto)}}</label>
 
                                                     <div id="divPublico_{{$publico->id}}" @if (old('publico_'.$publico->id)) style="display: block;" @else style="display: none;" @endif>
@@ -173,7 +173,7 @@
                                     </div>
                                     <div class="form-group col-md-6">
                                         <label for="inputCPF" class="style_titulo_input">CPF<span class="style_titulo_campo">*</span><span class="style_subtitulo_input"> (obrigatório)</span> </label>
-                                        <input type="text" class="form-control style_input cpf @error('cpf') is-invalid @enderror" id="inputCPF" placeholder="Ex.: 000.000.000-00" name="cpf" value="{{ $candidato->cpf }}"  disabled>
+                                        <input type="text" class="form-control style_input cpf @error('cpf') is-invalid @enderror" id="inputCPF" placeholder="Ex.: 000.000.000-00" name="cpf" value="{{ $candidato->cpf }}"  readonly>
 
                                         @error('cpf')
                                         <div id="validationServer05Feedback" class="invalid-feedback">
