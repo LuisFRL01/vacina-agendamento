@@ -23,6 +23,7 @@ class PostoVacinacaoController extends Controller
     use HorariosAgrupadosPorDia {
         horarios as protected traitHorarios;
     }
+
     public function horarios($posto_id) {
 
         $horarios_agrupados_por_dia = $this->traitHorarios($posto_id);
